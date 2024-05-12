@@ -1,0 +1,26 @@
+## GENERAL YAML FILE
+
+# MACHINE LEARNING APP
+# Supervised
+OPTIMAL_FLOW: 'optimal_flow-0.1.11/optimal_flow.exe'   
+RANDOM_FOREST: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe' 
+SUPPORT_VECTOR_MACHINE: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe'  
+LINEAR_REGRESSION: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe'    
+PREDICTION: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe' 
+TPOT: 'tpot-0.12.1/tpot.exe'
+# Unsupervised
+K_MEANS: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe' 
+FUZZY_K_MEANS: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe'  
+HIERARCHICAL_CLUSTERING: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe'    
+DBSCAN: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe'
+OPTICS: 'scikit-learn-1.3.2/scikit-learn-1.3.2.exe'
+
+# GEOMETRIC BASED METHODS
+JAKTERISTICS: 'jakteristics-0.6.0/jakteristics-0.6.0.exe'  
+
+# OTHER METHODS
+ANISOTROPIC_DENOISING: 'anisotropic_denoising-1.0.4/anisotropic_denoising-1.0.4.exe'
+POTREE_CONVERTER: 'potree-2.1.1/PotreeConverter.exe'
+
+
+

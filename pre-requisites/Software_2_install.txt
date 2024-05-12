@@ -1,0 +1,2 @@
+CloudCompare 2.13.1 Kharkiv with the option Python runtime checked
+
