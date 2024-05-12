@@ -36,6 +36,7 @@ SetupIconFile=logo.ico
 ;Files to be copied
 Source: "seg4d.py"; DestDir: "{app}\plugins\Python\Lib\site-packages\{#appName}"; Tasks: ; Languages: ; Flags: replacesameversion
 Source: "assets\*"; DestDir: "{app}\plugins\Python\Lib\site-packages\{#appName}\assets"; Flags: recursesubdirs
+Source: "licenses\*"; DestDir: "{app}\plugins\Python\Lib\site-packages\{#appName}\licenses"; Flags: recursesubdirs
 Source: "configs\*"; DestDir: "{app}\plugins\Python\Lib\site-packages\{#appName}\configs"; Flags: recursesubdirs
 Source: "geometric-based_methods\*"; DestDir: "{app}\plugins\Python\Lib\site-packages\{#appName}\geometric-based_methods"; Flags: recursesubdirs
 Source: "main_module\*"; DestDir: "{app}\plugins\Python\Lib\site-packages\{#appName}\main_module"; Flags: recursesubdirs

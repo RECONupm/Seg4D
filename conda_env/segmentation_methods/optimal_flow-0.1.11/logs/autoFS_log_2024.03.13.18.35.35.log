@@ -1,0 +1,52 @@
+13/03 18:35:35 - INFO - ####################################################################################################################################################################################################################################
+13/03 18:35:35 - INFO - Optimal Flow - autoFS - Auto Feature Selection Module :: 2024.03.13.18.35.35
+13/03 18:35:35 - INFO - ####################################################################################################################################################################################################################################
+13/03 18:35:35 - INFO - Copyright All Reserved by Tony Dong | e-mail: tonyleidong@gmail.com 
+13/03 18:35:35 - INFO - Official Documentation: https://optimal-flow.readthedocs.io
+13/03 18:35:35 - INFO - ------------------------------------------------------------
+13/03 18:35:35 - INFO - All previous logfiles will be deleted, when DELETE_FLAG is set to True.
+13/03 18:35:35 - INFO - Deleted file:autoFS_log_2024.01.05.10.16.57.log
+13/03 18:35:35 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:35:35 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:35:35 - INFO - Current Running:kbest_f selector
+13/03 18:35:35 - INFO - This selector executed 0.0002 minutes
+13/03 18:35:35 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:35:35 - INFO - Current Running:rfe_lr selector
+13/03 18:35:54 - INFO - This selector executed 0.3082 minutes
+13/03 18:35:54 - INFO - The optimalflow autoFS identify the top 25 important features for classification are: ['Verticality (1.6)', 'Relative_position', 'Anisotropy (0.1)', 'Sphericity (0.1)', 'Verticality (0.1)', 'Roughness (0.2)', 'Anisotropy (0.2)', 'Sphericity (0.2)', 'Verticality (0.2)', 'Anisotropy (0.4)', 'Sphericity (0.4)', 'Verticality (0.4)', 'Verticality (0.8)', 'Normal change rate (0.1)', 'Omnivariance (0.1)', 'Surface variation (0.1)', 'Mean curvature (0.2)', 'Gaussian curvature (0.2)', 'Normal change rate (0.2)', 'Omnivariance (0.2)', 'Planarity (0.2)', 'Surface variation (0.2)', 'Omnivariance (0.4)', 'Surface variation (0.4)', 'Intensity'].
+13/03 18:37:13 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:37:13 - INFO - Current Running:kbest_f selector
+13/03 18:37:13 - INFO - This selector executed 0.0002 minutes
+13/03 18:37:13 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:37:13 - INFO - Current Running:rfe_lr selector
+13/03 18:37:33 - INFO - This selector executed 0.326 minutes
+13/03 18:37:33 - INFO - The optimalflow autoFS identify the top 25 important features for classification are: ['Verticality (1.6)', 'Relative_position', 'Anisotropy (0.1)', 'Sphericity (0.1)', 'Verticality (0.1)', 'Roughness (0.2)', 'Anisotropy (0.2)', 'Sphericity (0.2)', 'Verticality (0.2)', 'Anisotropy (0.4)', 'Sphericity (0.4)', 'Verticality (0.4)', 'Verticality (0.8)', 'Normal change rate (0.1)', 'Omnivariance (0.1)', 'Surface variation (0.1)', 'Mean curvature (0.2)', 'Gaussian curvature (0.2)', 'Normal change rate (0.2)', 'Omnivariance (0.2)', 'Planarity (0.2)', 'Surface variation (0.2)', 'Omnivariance (0.4)', 'Surface variation (0.4)', 'Intensity'].
+13/03 18:37:49 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:37:49 - INFO - Current Running:kbest_f selector
+13/03 18:37:49 - INFO - This selector executed 0.0003 minutes
+13/03 18:37:49 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:37:49 - INFO - Current Running:rfe_lr selector
+13/03 18:38:09 - INFO - This selector executed 0.3298 minutes
+13/03 18:38:09 - INFO - The optimalflow autoFS identify the top 25 important features for classification are: ['Verticality (1.6)', 'Relative_position', 'Anisotropy (0.1)', 'Sphericity (0.1)', 'Verticality (0.1)', 'Roughness (0.2)', 'Anisotropy (0.2)', 'Sphericity (0.2)', 'Verticality (0.2)', 'Anisotropy (0.4)', 'Sphericity (0.4)', 'Verticality (0.4)', 'Verticality (0.8)', 'Normal change rate (0.1)', 'Omnivariance (0.1)', 'Surface variation (0.1)', 'Mean curvature (0.2)', 'Gaussian curvature (0.2)', 'Normal change rate (0.2)', 'Omnivariance (0.2)', 'Planarity (0.2)', 'Surface variation (0.2)', 'Omnivariance (0.4)', 'Surface variation (0.4)', 'Intensity'].
+13/03 18:38:41 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:38:41 - INFO - Current Running:kbest_f selector
+13/03 18:38:41 - INFO - This selector executed 0.0003 minutes
+13/03 18:38:41 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:38:41 - INFO - Current Running:rfe_lr selector
+13/03 18:39:00 - INFO - This selector executed 0.3183 minutes
+13/03 18:39:00 - INFO - The optimalflow autoFS identify the top 25 important features for classification are: ['Verticality (1.6)', 'Relative_position', 'Anisotropy (0.1)', 'Sphericity (0.1)', 'Verticality (0.1)', 'Roughness (0.2)', 'Anisotropy (0.2)', 'Sphericity (0.2)', 'Verticality (0.2)', 'Anisotropy (0.4)', 'Sphericity (0.4)', 'Verticality (0.4)', 'Verticality (0.8)', 'Normal change rate (0.1)', 'Omnivariance (0.1)', 'Surface variation (0.1)', 'Mean curvature (0.2)', 'Gaussian curvature (0.2)', 'Normal change rate (0.2)', 'Omnivariance (0.2)', 'Planarity (0.2)', 'Surface variation (0.2)', 'Omnivariance (0.4)', 'Surface variation (0.4)', 'Intensity'].
+13/03 18:39:14 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:39:14 - INFO - Current Running:kbest_f selector
+13/03 18:39:14 - INFO - This selector executed 0.0003 minutes
+13/03 18:39:14 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:39:14 - INFO - Current Running:rfe_lr selector
+13/03 18:39:32 - INFO - This selector executed 0.3058 minutes
+13/03 18:39:32 - INFO - The optimalflow autoFS identify the top 25 important features for classification are: ['Verticality (1.6)', 'Relative_position', 'Anisotropy (0.1)', 'Sphericity (0.1)', 'Verticality (0.1)', 'Roughness (0.2)', 'Anisotropy (0.2)', 'Sphericity (0.2)', 'Verticality (0.2)', 'Anisotropy (0.4)', 'Sphericity (0.4)', 'Verticality (0.4)', 'Verticality (0.8)', 'Normal change rate (0.1)', 'Omnivariance (0.1)', 'Surface variation (0.1)', 'Mean curvature (0.2)', 'Gaussian curvature (0.2)', 'Normal change rate (0.2)', 'Omnivariance (0.2)', 'Planarity (0.2)', 'Surface variation (0.2)', 'Omnivariance (0.4)', 'Surface variation (0.4)', 'Intensity'].
+13/03 18:41:22 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:41:22 - INFO - Current Running:kbest_f selector
+13/03 18:41:22 - INFO - This selector executed 0.0003 minutes
+13/03 18:41:22 - INFO - The optimalflow autoFS identify the top 25 important features for classification are: ['Verticality (1.6)', 'Relative_position', 'Normal change rate (0.1)', 'Omnivariance (0.1)', 'Anisotropy (0.1)', 'Surface variation (0.1)', 'Sphericity (0.1)', 'Verticality (0.1)', 'Roughness (0.2)', 'Mean curvature (0.2)', 'Gaussian curvature (0.2)', 'Normal change rate (0.2)', 'Omnivariance (0.2)', 'Anisotropy (0.2)', 'Planarity (0.2)', 'Surface variation (0.2)', 'Sphericity (0.2)', 'Verticality (0.2)', 'Omnivariance (0.4)', 'Anisotropy (0.4)', 'Surface variation (0.4)', 'Sphericity (0.4)', 'Verticality (0.4)', 'Verticality (0.8)', 'Intensity'].
+13/03 18:41:33 - INFO - ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+13/03 18:41:33 - INFO - Current Running:kbest_f selector
+13/03 18:41:33 - INFO - This selector executed 0.0003 minutes
+13/03 18:41:33 - INFO - The optimalflow autoFS identify the top 25 important features for classification are: ['Verticality (1.6)', 'Relative_position', 'Normal change rate (0.1)', 'Omnivariance (0.1)', 'Anisotropy (0.1)', 'Surface variation (0.1)', 'Sphericity (0.1)', 'Verticality (0.1)', 'Roughness (0.2)', 'Mean curvature (0.2)', 'Gaussian curvature (0.2)', 'Normal change rate (0.2)', 'Omnivariance (0.2)', 'Anisotropy (0.2)', 'Planarity (0.2)', 'Surface variation (0.2)', 'Sphericity (0.2)', 'Verticality (0.2)', 'Omnivariance (0.4)', 'Anisotropy (0.4)', 'Surface variation (0.4)', 'Sphericity (0.4)', 'Verticality (0.4)', 'Verticality (0.8)', 'Intensity'].
