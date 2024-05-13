@@ -255,7 +255,7 @@ class main_GUI(tk.Frame):
         # PDF visualizer in tkinter
         v1 = pdf_1.ShowPdf_1()
         v1.img_object_li.clear()
-        v1.pdf_view(tab1, pdf_location=path_guide_1, width=55, height=25).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
+        v1.pdf_view(tab1, pdf_location=path_guide_1, width=55, height=27).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
 
         
         # TAB2 = DAMAGE EVALUATION
@@ -285,7 +285,7 @@ class main_GUI(tk.Frame):
         # Label with hyperlink
         label_text = "For more information: open the guide in your default PDF visualizer"
         label = tk.Label(tab2, text=label_text, fg="blue", cursor="hand2")
-        label.grid(row=11, column=4, sticky="w", pady=10)
+        label.grid(row=11, column=4, sticky="w", pady=1)
         label.bind("<Button-1>", lambda event: self.open_guide_2(event))
    
         # Create a vertical line (separator) in the middle of the window
@@ -295,7 +295,7 @@ class main_GUI(tk.Frame):
         # PDF visualizer in tkinter
         v2 = pdf_2.ShowPdf_2()
         v2.img_object_li.clear()
-        v2.pdf_view(tab2, pdf_location=path_guide_2, width=55, height=25).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
+        v2.pdf_view(tab2, pdf_location=path_guide_2, width=55, height=27).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
         
         
         # TAB3 = OTHER
@@ -307,7 +307,7 @@ class main_GUI(tk.Frame):
         ]
 
         for row, (frame_text, buttons) in enumerate(frames_and_buttons, start=1):
-            frame = tk.LabelFrame(tab3, text=frame_text, padx=5, pady=5)
+            frame = tk.LabelFrame(tab3, text=frame_text, padx=5, pady=2)
             frame.grid(row=row, column=0, sticky="nsew", columnspan=2, padx=5, pady=5)
             for col, (button_text, command) in enumerate(buttons):
                 button = ttk.Button(frame, text=button_text, command=lambda cmd=command: cmd(root_gui))
@@ -316,17 +316,17 @@ class main_GUI(tk.Frame):
         # Label with hyperlink
         label_text = "For more information: open the guide in your default PDF visualizer"
         label = tk.Label(tab3, text=label_text, fg="blue", cursor="hand2")
-        label.grid(row=41, column=4, sticky="w", pady=10)
+        label.grid(row=41, column=4, sticky="w", pady=1)
         label.bind("<Button-1>", lambda event: self.open_guide_3(event))
         
         # Create a vertical line (separator) in the middle of the window
         separator = ttk.Separator(tab3, orient="vertical")
-        separator.grid(row=0, column=2, rowspan=5, sticky="ns", padx=85 , pady=10)
+        separator.grid(row=0, column=2, rowspan=5, sticky="ns", padx=73.49 , pady=10)
         
         # PDF visualizer in tkinter
         v3 = pdf_3.ShowPdf_3()
         v3.img_object_li.clear()
-        v3.pdf_view(tab3, pdf_location=path_guide_3, width=55, height=25).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
+        v3.pdf_view(tab3, pdf_location=path_guide_3, width=55, height=27).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
         
         
         # TAB4 = ABOUT
@@ -407,11 +407,11 @@ class main_GUI(tk.Frame):
             "Luis Javier Sánchez Aparicio (lj.sanchez@upm.es). PhD in Geoinformatics. Universidad Politécnica de Madrid. Department\n"
             "of Construction and Architectural Technologies. ORCID: 0000-0001-6758-2234.",
             "Pablo Sanz Honrado (p.sanzh@upm.es). Pre-doctoral fellow. Universidad Politécnica de Madrid. Department of\n"
-            "Construction and Architectural Technologies. ORCID: 0000-0002-8090-1794.",
+            "Construction and Architectural Technologies. ORCID: 0009-0009-1351-9411.",
             "Rubén Santamaría Maestro (ruben.santamaria.maestro@upm.es). Pre-doctoral fellow. Universidad Politécnica de\n"
             "Madrid. Department of Construction and Architectural Technologies. ORCID: 0009-0001-0141-2002.",
             "Paula Villanueva Llauradó (paula.villanueva@upm.es). PhD in Structural Engineering. Universidad Politécnica de Madrid.\n"
-            "Department of Structures. ORCID: 0009-0001-0141-2002.",
+            "Department of Structures. ORCID: 0000-0002-8090-1794.",
             "Jose Ramón Aira Zunzunegui (joseramon.aira@upm.es). PhD in Mechanics of Materials. Universidad Politécnica de Madrid.\n"
             "Department of Construction and Architectural Technologies. ORCID: 0000-0002-4598-5259.",
             "Jesús María García Gago (jesusmgg@usal.es). PhD in Cartographic and Terrain Engineering. University of Salamanca.\n"
