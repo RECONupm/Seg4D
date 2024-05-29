@@ -6,6 +6,8 @@ Plugin developed within the framework of the research project CAREEN (APOYO-JOVE
 Be sure to check the [Documentation](https://github.com/Luisjupm/Seg4D/blob/main/assets_sheets/guide_construction-system-segmentation.pdf), which features detailed explanations on how the program works and a User Manual.
 
 # Download
+The download link is as follows: [Seg4d Installer](https://drive.upm.es/s/ELi6JEe5BrkxpZE)
+
 You can find out how to install Seg4D in the [Installation Guide](https://github.com/Luisjupm/Seg4D/blob/main/installer/seg4d_installation_guide.pdf).
 
 Seg4D is available on Windows as a plugin for CloudCompare (2.13) thanks to CloudCompare PythonRuntime (see References). You can download the latest version of CloudCompare (Windows installer version) including the CloudCompare PythonRuntime plugin here:
