@@ -6,7 +6,7 @@ Plugin developed within the framework of the research project CAREEN (APOYO-JOVE
 Be sure to check the [Documentation](https://github.com/Luisjupm/Seg4D/blob/main/assets_sheets/guide_construction-system-segmentation.pdf), which features detailed explanations on how the program works and a User Manual.
 
 # Download
-The download link is as follows: [Seg4d Installer](https://drive.upm.es/s/ELi6JEe5BrkxpZE)
+The download link is as follows: [Seg4d Installer](https://drive.upm.es/s/vKEtCr6SgbCUKbG)
 
 You can find out how to install Seg4D in the [Installation Guide](https://github.com/Luisjupm/Seg4D/blob/main/installer/seg4d_installation_guide.pdf).
 
