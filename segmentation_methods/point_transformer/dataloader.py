@@ -2,7 +2,7 @@
 """
 Created on Mon Nov 27 19:42:08 2023
 
-@author: LuisJa with the support of TIDOP (University of Salamanca)
+@author: LuisJa
 """
 
 '''
