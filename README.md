@@ -27,6 +27,13 @@ Simply install the latest version of CloudCompare and tick the Python checkbox d
 ![Captura de pantalla 2024-05-22 122517](https://github.com/Luisjupm/Seg4D/assets/107433987/2a84dd3b-5d17-4ca4-8d3f-852e7cc64ad1)
 
 # Compile executables
+Once the software is installed, the next step is to compile executables that work with other libraries, such as Scikit Learn, TPOT, Point Transformer, etc.
+
+1. The first step is to create a 'conda' environment with the Python 3.10 version for each executable to be compiled.
+
+2. The second step is to import the necessary libraries for each environment. To do this, inside the folder 'conda_env' is each of the environments that have to be created. Inside each folder there is a file called 'requirements.txt' that will have to be used to import all the necessary libraries.
+
+3. The third and last step will be to compile the executable. To do this, you will have to install the auto-py-to-exe library in each environment by cmd (pip install auto-py-to-exe). Then, via cmd, inside the corresponding environment, you will compile the executable. In the Input you will put the path of the .py file, which is inside the 'conda-env' folder and in the Output you will put the path where it has to be found. You can see it in the following table:
 
 
 # Folders structure
