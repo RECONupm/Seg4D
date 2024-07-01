@@ -26,6 +26,9 @@ Simply install the latest version of CloudCompare and tick the Python checkbox d
 **Seg4D plugin GUI.**
 ![Captura de pantalla 2024-05-22 122517](https://github.com/Luisjupm/Seg4D/assets/107433987/2a84dd3b-5d17-4ca4-8d3f-852e7cc64ad1)
 
+# Compile executables
+
+
 # Folders structure
 
 - assets: Pictures for "About" tab.
