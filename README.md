@@ -29,6 +29,7 @@ Simply install the latest version of CloudCompare and tick the Python checkbox d
 # Run the code
 
 **1. Download from GitHub**
+
 Press "<> Code" and select "Download ZIP"
 
 **2. Install CloudCompare and Python-Plugin for CloudCompare**
