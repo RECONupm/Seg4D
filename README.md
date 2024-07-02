@@ -33,7 +33,15 @@ Once the software is installed, the next step is to compile executables that wor
 
 2. The second step is to import the necessary libraries for each environment. To do this, inside the folder 'conda_env' is each of the environments that have to be created. Inside each folder there is a file called 'requirements.txt' that will have to be used to import all the necessary libraries.
 
-3. The third and last step will be to compile the executable. To do this, you will have to install the auto-py-to-exe library in each environment by cmd (pip install auto-py-to-exe). Then, via cmd, inside the corresponding environment, you will compile the executable. In the Input you will put the path of the .py file, which is inside the 'conda-env' folder and in the Output you will put the path where it has to be found. You can see it in the following section "Folders structure".
+3. The third and last step will be to compile the executable. To do this, you will have to install the auto-py-to-exe library in each environment by cmd (pip install auto-py-to-exe). Then, via cmd, inside the corresponding environment, you will compile the executable. In the Input you will put the path of the .py file (1), which is inside the 'conda-env' folder and in the Output you will put the path where it has to be found (2) before you press convert .py yo .exe (3). You can see in the following section the path you must put in the output (2):
+
+"jakteristics-0.6.0" --> geometric-based_methods folder
+"point_transformer" --> segmentation_methods folder
+"optimal_flow-0.1.11" --> segmentation_methods folder
+"scikit-learn-1.3.2" --> segmentation_methods folder
+"tpot-0.12.1" --> segmentation_methods folder
+
+![autopy](https://github.com/Luisjupm/Seg4D/assets/107433987/9a160b92-11eb-4b94-b178-01171a798b99)
 
 
 # Folders structure
@@ -77,7 +85,7 @@ Once the software is installed, the next step is to compile executables that wor
 
 - segmentation_methods: Scripts files and executables of segmentation methods
 	- "deep_learning_segmentation.py" and the executable "point_transformer" 
-	- "supervised_machine_learning.py" and the executables "optimal_flow-0.1.11", "scikit-learn-1.3.2" y "tpot-0.12.1"
+	- "supervised_machine_learning.py" and the executables "optimal_flow-0.1.11", "scikit-learn-1.3.2" and "tpot-0.12.1"
 	- "unsupervised_machine_learning.py" and the executable "scikit-learn-1.3.2"
 
 # Citing Seg4D
