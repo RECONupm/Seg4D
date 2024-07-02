@@ -26,14 +26,34 @@ Simply install the latest version of CloudCompare and tick the Python checkbox d
 **Seg4D plugin GUI.**
 ![Captura de pantalla 2024-05-22 122517](https://github.com/Luisjupm/Seg4D/assets/107433987/2a84dd3b-5d17-4ca4-8d3f-852e7cc64ad1)
 
-# Compile executables
+# Run the code
+
+**1. Download from GitHub**
+Press "<> Code" and select "Download ZIP"
+
+**2. Install CloudCompare and Python-Plugin for CloudCompare**
+
+First of all, you will need to have CloudCompare and its CloudCompare-PythonPlugin extension installed. The latest version of CloudCompare (2.13.1) already contains the CloudCompare-PythonPlugin extension. You can download it here:
+
+https://www.danielgm.net/cc/
+
+Please note to select the «Install the Python and 3DFin plugins» button in the first CloudCompare® installation window.
+
+![image](https://github.com/Luisjupm/Seg4D/assets/107433987/35ff8a80-e2d5-4abb-a996-cbe1384e29d0)
+
+In case you already have the CloudCompare application installed without the extension, this page informs you about the steps to download it:
+
+https://tmontaigu.github.io/CloudCompare-PythonRuntime/building.html#building-as-plugin
+
+**3. Compile libraries**
+
 Once the software is installed, the next step is to compile executables that work with other libraries, such as Scikit Learn, TPOT, Point Transformer, etc.
 
-1. The first step is to create a 'conda' environment with the Python 3.10 version for each executable to be compiled.
+- The first step is to create a 'conda' environment with the Python 3.10 version for each executable to be compiled.
 
-2. The second step is to import the necessary libraries for each environment. To do this, inside the folder 'conda_env' is each of the environments that have to be created. Inside each folder there is a file called 'requirements.txt' that will have to be used to import all the necessary libraries.
+- The second step is to import the necessary libraries for each environment. To do this, inside the folder 'conda_env' is each of the environments that have to be created. Inside each folder there is a file called 'requirements.txt' that will have to be used to import all the necessary libraries.
 
-3. The third and last step will be to compile the executable. To do this, you will have to install the auto-py-to-exe library in each environment by cmd (pip install auto-py-to-exe). Then, via cmd, inside the corresponding environment, you will compile the executable. In the Input you will put the path of the .py file (1), which is inside the 'conda-env' folder and in the Output you will put the path where it has to be found (2) before you press convert .py yo .exe (3). You can see in the following section the path you must put in the output (2):
+- The third and last step will be to compile the executable. To do this, you will have to install the auto-py-to-exe library in each environment by cmd (pip install auto-py-to-exe). Then, via cmd, inside the corresponding environment, you will compile the executable. In the Input you will put the path of the .py file (1), which is inside the 'conda-env' folder and in the Output you will put the path where it has to be found (2) before you press convert .py yo .exe (3). You can see in the following section the path you must put in the output (2):
 
 "jakteristics-0.6.0" --> geometric-based_methods folder
 
@@ -46,6 +66,9 @@ Once the software is installed, the next step is to compile executables that wor
 "tpot-0.12.1" --> segmentation_methods folder
 
 ![autopy](https://github.com/Luisjupm/Seg4D/assets/107433987/9a160b92-11eb-4b94-b178-01171a798b99)
+
+**4. Add script on Python-Plugin**
+
 
 
 # Folders structure
