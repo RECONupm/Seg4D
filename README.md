@@ -70,7 +70,9 @@ Once the software is installed, the next step is to compile executables that wor
 
 **4. Add script on Python-Plugin**
 
+Open CloudCompare and in the Python Plugin tab select "Script Register", then select "Add Script" and then look in the folder downloaded from GitHub, seg4d.py, which is the code that opens the whole program. If you only want to open a specific tool, go to the folders containing the .py files (see "Folders structure" section below) and select the one you want.
 
+![add_script](https://github.com/Luisjupm/Seg4D/assets/107433987/5e8177a0-93cd-4e16-9680-1eec57d64248)
 
 # Folders structure
 
