@@ -720,7 +720,7 @@ class GUI_mlu(tk.Frame):
             # Revome files
             os.remove(os.path.join(self.output_directory, 'input_point_cloud_training.txt'))
             os.remove(os.path.join(self.output_directory,'algorithm_configuration.yaml'))
-            os.remove(os.path.join(self.output_directory,'predictions.xyz'))
+            os.remove(os.path.join(self.output_directory,'predictions.txt'))
             # Stop the progress bar
             progress.stop()
             print("The process has been finished")
