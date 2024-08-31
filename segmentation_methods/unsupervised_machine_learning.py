@@ -399,7 +399,7 @@ class GUI_mlu(tk.Frame):
                 button_ok.grid(row=6, column=1)              
             elif algo=="DBSCAN":
                
-                label_param1_dbscan = tk.Label(set_up_window, text="Epsilon (maximum distance between points of a cluster):")
+                label_param1_dbscan = tk.Label(set_up_window, text="Epsilon (minimum distance between points of a cluster):")
                 label_param1_dbscan.grid(row=0, column=0, sticky=tk.W)
                 
                 entry_param1_dbscan = tk.Entry(set_up_window)
