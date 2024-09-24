@@ -121,11 +121,11 @@ Open CloudCompare and in the Python Plugin tab select "Script Register", then se
 # Citing Seg4D
 You can cite the repository itself:
 
-https://github.com/Luisjupm/Seg4D/
+https://github.com/RECONupm/Seg4D.git
 
 We are currently working on an academic article about Seg4D plugin, which may be published in 2024.
 
-L.J. Sánchez-Aparicio, P. Sanz-Honrado, R. Santamaria-Maestro, Seg4D: a CloudCompare plugin for supporting the diagnosis of historic constructions from 3D point clouds, n.d.
+L.J. Sánchez-Aparicio, R. Santamaria-Maestro, P. Sanz-Honrado, P. Villanueva-Llauradó, J. Ramón Aira-Zunzunegui, D. González-Aguilera, Seg4D: a holistic solution for supporting the diagnosis of historic constructions from 3D point clouds (In press), 2024. https://github.com/RECONupm/Seg4D.git.
 
 # References
 CloudCompare-PythonRuntime, by Thomas Montaigu: [CloudCompare-PythonRuntime](https://github.com/tmontaigu/CloudCompare-PythonRuntime)
