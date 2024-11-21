@@ -278,9 +278,9 @@ class main_GUI(tk.Frame):
                 button = ttk.Button(frame, text=button_text, command=lambda cmd=command: cmd(root_gui))
                 button.grid(row=row, column=col, sticky="nsew", pady=2, padx=5)
         
-        # Disabled button
-        bim_integration_button = next(button for frame_text, buttons in frames_and_buttons if frame_text == "BIM Integration" for button_text, _ in buttons if button_text == "Open")
-        bim_integration_button.config(state="disabled")
+        # # Disabled button
+        # bim_integration_button = next(button for frame_text, buttons in frames_and_buttons if frame_text == "BIM Integration" for button_text, _ in buttons if button_text == "Open")
+        # bim_integration_button.config(state="enabled")
         
         # Label with hyperlink
         label_text = "For more information: open the guide in your default PDF visualizer"
