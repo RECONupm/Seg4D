@@ -119,13 +119,11 @@ Open CloudCompare and in the Python Plugin tab select "Script Register", then se
 	- "unsupervised_machine_learning.py" and the executable "scikit-learn-1.3.2"
 
 # Citing Seg4D
-You can cite the repository itself:
+Sánchez-Aparicio, L.J.; Santamaría-Maestro, R.; Sanz-Honrado, P.; Villanueva-Llauradó, P.; Aira-Zunzunegui, J.R.; González-Aguilera, D. A Holistic Solution for Supporting the Diagnosis of Historic Constructions from 3D Point Clouds. Remote Sens. 2025, 17, 2018. https://doi.org/10.3390/rs17122018
+
+Or you can cite the repository itself:
 
 https://github.com/RECONupm/Seg4D.git
-
-We are currently working on an academic article about Seg4D plugin, which may be published in 2024.
-
-L.J. Sánchez-Aparicio, R. Santamaria-Maestro, P. Sanz-Honrado, P. Villanueva-Llauradó, J. Ramón Aira-Zunzunegui, D. González-Aguilera, Seg4D: a holistic solution for supporting the diagnosis of historic constructions from 3D point clouds (In press), 2024. https://github.com/RECONupm/Seg4D.git.
 
 # References
 CloudCompare-PythonRuntime, by Thomas Montaigu: [CloudCompare-PythonRuntime](https://github.com/tmontaigu/CloudCompare-PythonRuntime)
