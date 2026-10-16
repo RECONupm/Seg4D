@@ -1,0 +1,5 @@
+# Build tools only. Bootstrap installs CUDA libraries using the separate runtime requirements.
+pyinstaller==6.2.0
+# PyInstaller 6.2 expects pkg_resources' vendored jaraco modules, which were
+# removed by newer setuptools releases.
+setuptools==69.5.1

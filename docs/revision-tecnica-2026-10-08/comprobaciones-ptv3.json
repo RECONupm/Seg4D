@@ -1,0 +1,78 @@
+{
+  "python": "3.8.19 (default, Mar 20 2024, 19:55:45) [MSC v.1916 64 bit (AMD64)]",
+  "torch": "1.12.1",
+  "cuda": "11.3",
+  "gpu_available": true,
+  "float32_coordinate_precision": {
+    "coordinates": [
+      [
+        500000.0,
+        4500000.0,
+        1.0
+      ],
+      [
+        500000.0,
+        4500000.0,
+        1.0
+      ]
+    ],
+    "distinct_x": 1,
+    "distinct_y": 1
+  },
+  "patch_sizes_for_65_points_limit_32": [
+    32,
+    33
+  ],
+  "serialization_cpu": [
+    {
+      "depth": 1,
+      "order": "z",
+      "exception": "ValueError",
+      "message": "too many values to unpack (expected 3)"
+    },
+    {
+      "depth": 1,
+      "order": "hilbert",
+      "roundtrip_ok": true
+    },
+    {
+      "depth": 4,
+      "order": "z",
+      "exception": "ValueError",
+      "message": "too many values to unpack (expected 3)"
+    },
+    {
+      "depth": 4,
+      "order": "hilbert",
+      "roundtrip_ok": true
+    },
+    {
+      "depth": 8,
+      "order": "z",
+      "exception": "ValueError",
+      "message": "too many values to unpack (expected 3)"
+    },
+    {
+      "depth": 8,
+      "order": "hilbert",
+      "roundtrip_ok": true
+    },
+    {
+      "depth": 16,
+      "order": "z",
+      "exception": "ValueError",
+      "message": "too many values to unpack (expected 3)"
+    },
+    {
+      "depth": 16,
+      "order": "hilbert",
+      "roundtrip_ok": true
+    }
+  ],
+  "runtime_versions": {
+    "torch": "1.12.1",
+    "numpy": "1.24.3",
+    "spconv-cu113": "2.3.6",
+    "torch-scatter": "2.0.9"
+  }
+}

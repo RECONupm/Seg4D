@@ -13,9 +13,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
-from tkPDFViewer import tkPDFViewer_1 as pdf_1
-from tkPDFViewer import tkPDFViewer_2 as pdf_2
-from tkPDFViewer import tkPDFViewer_3 as pdf_3
+from main_module.pdf_viewer import ShowPdf
 import webbrowser
 from PIL import Image, ImageTk
 
@@ -24,10 +22,9 @@ import cccorelib
 import pycc
 
 #%% ADDING THE MAIN MODULE FOR ADDITIONAL FUNCTIONS
-script_directory = os.path.abspath(__file__)
-path_parts = script_directory.split(os.path.sep)
+current_directory = os.path.dirname(os.path.abspath(__file__))
 
-additional_modules_directory=os.path.sep.join(path_parts[:-1])+ '\main_module'
+additional_modules_directory = os.path.join(current_directory, "main_module")
 sys.path.insert(0, additional_modules_directory)
 
 from main_gui import definition_of_labels_type_1, definition_of_buttons_type_1
@@ -35,34 +32,40 @@ from main_gui import definition_of_labels_type_1, definition_of_buttons_type_1
 #%% ADDING GUIS
 
 # Segmentation methods
-additional_modules_directory=os.path.sep.join(path_parts[:-1])+ '\segmentation_methods'
+additional_modules_directory = os.path.join(current_directory, "segmentation_methods")
 sys.path.insert(0, additional_modules_directory)
 
 from supervised_machine_learning import GUI_mls
 from unsupervised_machine_learning import GUI_mlu
 from deep_learning_segmentation import GUI_dl
+from deep_learning_segmentation_v3 import GUI_dl_v3
 from bim_integration_css import GUI_bicss
 from bim_integration_damage import GUI_bid
 
 # Geometric based methods
-additional_modules_directory=os.path.sep.join(path_parts[:-1])+ '\geometric-based_methods'
+additional_modules_directory = os.path.join(
+    current_directory, "geometric-based_methods"
+)
 sys.path.insert(0, additional_modules_directory)
 
 from geometrical_features import GUI_gf
+from supervoxel_computation import GUI_supervoxels
 from analysis_of_arches import GUI_arches
 from analysis_of_deflections import GUI_deflection
 from analysis_of_inclinations import GUI_inclination
 from analysis_of_vaults import GUI_vaults
 
 # Radiometric based methods
-additional_modules_directory=os.path.sep.join(path_parts[:-1])+ '\\radiometric-based_methods'
+additional_modules_directory = os.path.join(
+    current_directory, "radiometric-based_methods"
+)
 sys.path.insert(0, additional_modules_directory)
 
 from color_conversion import GUI_cc
 from stadistical_features import GUI_sf
 
 # Other methods
-additional_modules_directory=os.path.sep.join(path_parts[:-1])+ '\other_methods'
+additional_modules_directory = os.path.join(current_directory, "other_methods")
 sys.path.insert(0, additional_modules_directory)
 
 from anisotropic_denoising import GUI_ad
@@ -70,7 +73,6 @@ from potree_converter import GUI_potree_converter
 from voxelize import GUI_voxelize
 
 #%% ADDING assets
-current_directory= os.path.dirname(os.path.abspath(__file__))
 path_guide_1= os.path.join(current_directory,'assets',r"guide_1.pdf")
 path_guide_2= os.path.join(current_directory,'assets',r"guide_2.pdf")
 path_guide_3= os.path.join(current_directory,'assets',r"guide_3.pdf")
@@ -102,14 +104,32 @@ class main_GUI(tk.Frame):
         app_attr = f'{window_name}_app'
         
         if not hasattr(self, window_attr) or not getattr(self, window_attr).winfo_exists():
-            setattr(self, window_attr, tk.Toplevel(self.master))
-            setattr(self, app_attr, window_class(getattr(self, window_attr)))
-            getattr(self, app_attr).main_frame(getattr(self, window_attr))
+            window = tk.Toplevel(self.master)
+            window.withdraw()
+            setattr(self, window_attr, window)
+            setattr(self, app_attr, window_class(window))
+            getattr(self, app_attr).main_frame(window)
+
+            # Keep the tool window owned by and modal to the main SEG4D window.
+            # It must not be topmost: nested parameter dialogs need to be able
+            # to sit above it reliably on Windows.
+            window.transient(self.master)
+            window.update_idletasks()
+            window.deiconify()
+            window.wait_visibility()
+            window.lift(self.master)
+            window.grab_set()
+            window.focus_force()
         else:
-            getattr(self, window_attr).destroy()
+            window = getattr(self, window_attr)
+            window.lift(self.master)
+            window.focus_force()
             
     def toggle_gf(self,root_gui):
         self.toggle_window('gf', GUI_gf)
+
+    def toggle_supervoxels(self,root_gui):
+        self.toggle_window('supervoxels', GUI_supervoxels)
 
     def toggle_sf(self,root_gui):
         self.toggle_window('sf', GUI_sf)
@@ -125,6 +145,9 @@ class main_GUI(tk.Frame):
 
     def toggle_dl(self,root_gui):
         self.toggle_window('dl', GUI_dl)
+
+    def toggle_dl_v3(self,root_gui):
+        self.toggle_window('dl_v3', GUI_dl_v3)
 
     def toggle_arches(self,root_gui):
         self.toggle_window('arches', GUI_arches)
@@ -209,10 +232,10 @@ class main_GUI(tk.Frame):
         # TAB1 = CONSTRUCTION SYSTEMS SEGMENTATION
         
         frames_and_buttons = [
-            ("Features Computation", [("Geometrical features", self.toggle_gf), ("Stadistical features", self.toggle_sf)]),
+            ("Features Computation", [("Supervoxel computation", self.toggle_supervoxels), ("Geometrical features", self.toggle_gf), ("Stadistical features", self.toggle_sf)]),
             ("Color Conversion", [("Open", self.toggle_cc)]),
             ("Machine Learning", [("Supervised", self.toggle_mls), ("Unsupervised", self.toggle_mlu)]),
-            ("Deep Learning", [("Point Transformer", self.toggle_dl)]),
+            ("Deep Learning", [("Point Transformer V1", self.toggle_dl), ("Point Transformer V3", self.toggle_dl_v3)]),
             ("Synthetic point clouds", [("Timber slabs", self.toggle_deflection), ("Mansory vaults", self.toggle_vaults)]),
             ("BIM Integration", [("Open", self.toggle_bicss)])
         ]
@@ -253,7 +276,7 @@ class main_GUI(tk.Frame):
         separator.grid(row=0, column=3, rowspan=4, sticky="ns", padx=15, pady=10)
         
         # PDF visualizer in tkinter
-        v1 = pdf_1.ShowPdf_1()
+        v1 = ShowPdf()
         v1.img_object_li.clear()
         v1.pdf_view(tab1, pdf_location=path_guide_1, width=55, height=27).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
 
@@ -261,10 +284,10 @@ class main_GUI(tk.Frame):
         # TAB2 = DAMAGE EVALUATION
         
         frames_and_buttons = [
-            ("Features Computation", [("Geometrical features", self.toggle_gf), ("Stadistical features", self.toggle_sf)]),
+            ("Features Computation", [("Supervoxel computation", self.toggle_supervoxels), ("Geometrical features", self.toggle_gf), ("Stadistical features", self.toggle_sf)]),
             ("Color Conversion", [("Open", self.toggle_cc)]),
             ("Machine Learning", [("Supervised", self.toggle_mls), ("Unsupervised", self.toggle_mlu)]),
-            ("Deep Learning", [("Point Transformer", self.toggle_dl)]),
+            ("Deep Learning", [("Point Transformer V1", self.toggle_dl), ("Point Transformer V3", self.toggle_dl_v3)]),
             ("Arches and Vaults", [("Analysis of arches", self.toggle_arches), ("Analysis of vaults", self.toggle_vaults)]),
             ("Slabs", [("Analysis of deflection", self.toggle_deflection)]),
             ("Pilars and Buttresses", [("Analysis of inclination", self.toggle_inclination)]),
@@ -293,7 +316,7 @@ class main_GUI(tk.Frame):
         separator.grid(row=0, column=3, rowspan=5, sticky="ns", padx=15 , pady=10)
         
         # PDF visualizer in tkinter
-        v2 = pdf_2.ShowPdf_2()
+        v2 = ShowPdf()
         v2.img_object_li.clear()
         v2.pdf_view(tab2, pdf_location=path_guide_2, width=55, height=27).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
         
@@ -324,7 +347,7 @@ class main_GUI(tk.Frame):
         separator.grid(row=0, column=2, rowspan=5, sticky="ns", padx=73.49 , pady=10)
         
         # PDF visualizer in tkinter
-        v3 = pdf_3.ShowPdf_3()
+        v3 = ShowPdf()
         v3.img_object_li.clear()
         v3.pdf_view(tab3, pdf_location=path_guide_3, width=55, height=27).grid(row=0, column=4, rowspan=10, padx=5, pady=5, sticky="nsew")
         

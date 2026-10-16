@@ -7,24 +7,59 @@ Created on Tue Nov 14 11:34:55 2023
 
 import argparse
 import os
+import sys
 import yaml
 
 import pandas as pd
 from optimalflow.autoFS import dynaFS_clf
 
-def main():
-    # Import all the parameters form the CMD
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--i',type=str,help='Yaml configuration file')
-    parser.add_argument('--o',type=str,help='Output_directory')    
-    args=parser.parse_args()    
+
+def run_self_test():
+    if not callable(dynaFS_clf):
+        raise RuntimeError("OptimalFlow dynaFS_clf is unavailable.")
+    print("OptimalFlow runtime self-test passed.")
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog="optimal_flow",
+        description="Seg4D OptimalFlow feature-selection console runtime.",
+    )
+    parser.add_argument("-i", "--input", dest="i", help="YAML configuration file.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="o",
+        help="Output directory (overrides the YAML value).",
+    )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="Validate the frozen OptimalFlow runtime and exit.",
+    )
+    return parser
+
+
+def main(arguments=None):
+    parser = build_parser()
+    command_line = list(sys.argv[1:] if arguments is None else arguments)
+    if not command_line:
+        parser.print_help()
+        return 0
+    args = parser.parse_args(command_line)
+    if args.self_test:
+        run_self_test()
+        return 0
+    if not args.i:
+        parser.error("--input/--i is required unless --self-test is used.")
             
     # Read the configuration from the YAML file for the set-up
     with open(args.i, 'r') as yaml_file:
         config_data = yaml.safe_load(yaml_file)
     input_file= config_data.get('INPUT_POINT_CLOUD')
     selectors= config_data.get('SELECTORS_FILE')
-    output_directory= config_data.get('OUTPUT_DIRECTORY')
+    output_directory = os.path.abspath(args.o or config_data.get('OUTPUT_DIRECTORY'))
+    os.makedirs(output_directory, exist_ok=True)
     features=config_data['CONFIGURATION']['f']
     cross_val=config_data['CONFIGURATION']['cv']
     
@@ -90,4 +125,4 @@ def main():
             file.write(str(item))
             
 if __name__=='__main__':
-	main()
+    raise SystemExit(main())

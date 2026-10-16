@@ -7,6 +7,7 @@ Created on Mon Feb  5 13:12:14 2024
 
 import argparse
 import os
+import sys
 import yaml
 
 import pandas as pd
@@ -16,18 +17,67 @@ import jakteristics.utils
 from jakteristics.extension import compute_features
 
 
-def main():
-    # Import all the parameters form the CMD
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--i',type=str,help='Yaml configuration file')
-    parser.add_argument('--o',type=str,help='Output_directory')    
-    args=parser.parse_args() 
+def run_self_test():
+    points = np.ascontiguousarray(
+        [
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [1.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [0.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0],
+        ],
+        dtype=np.float64,
+    )
+    result = compute_features(
+        points, search_radius=2.0, feature_names=["linearity"]
+    )
+    if result.shape != (len(points), 1):
+        raise RuntimeError(f"Unexpected Jakteristics result shape: {result.shape}")
+    print("Jakteristics runtime self-test passed.")
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog="jakteristics",
+        description="Seg4D geometric-feature console runtime.",
+    )
+    parser.add_argument("-i", "--input", dest="i", help="YAML configuration file.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="o",
+        help="Output directory (overrides the YAML value).",
+    )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="Validate the frozen Jakteristics runtime and exit.",
+    )
+    return parser
+
+
+def main(arguments=None):
+    parser = build_parser()
+    command_line = list(sys.argv[1:] if arguments is None else arguments)
+    if not command_line:
+        parser.print_help()
+        return 0
+    args = parser.parse_args(command_line)
+    if args.self_test:
+        run_self_test()
+        return 0
+    if not args.i:
+        parser.error("--input/--i is required unless --self-test is used.")
             
     # Read the configuration from the YAML file for the set-up
     with open(args.i, 'r') as yaml_file:
         config_data = yaml.safe_load(yaml_file)
     input_file= config_data.get('INPUT_POINT_CLOUD')
-    output_directory= config_data.get('OUTPUT_DIRECTORY')
+    output_directory = os.path.abspath(args.o or config_data.get('OUTPUT_DIRECTORY'))
+    os.makedirs(output_directory, exist_ok=True)
     features_selected=config_data['CONFIGURATION']['input_features']
     radius=config_data['CONFIGURATION']['radius']
  
@@ -65,4 +115,4 @@ def main():
  
     
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

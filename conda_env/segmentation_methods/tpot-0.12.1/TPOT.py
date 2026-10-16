@@ -6,60 +6,144 @@ Created on Tue Nov 14 11:29:32 2023
 """
 
 import argparse
-
+import json
 import os
-import subprocess
 import sys
-import yaml
-
 
 import joblib
+import matplotlib
+import numpy as np
+import pandas as pd
+import yaml
 
-from sklearn.ensemble import *
-from sklearn.kernel_approximation import *
-from sklearn.naive_bayes import *
-from sklearn.neural_network import *
+matplotlib.use("Agg")
+
+from sklearn import (
+    cluster,
+    decomposition,
+    ensemble,
+    feature_selection,
+    kernel_approximation,
+    linear_model,
+    naive_bayes,
+    neighbors,
+    neural_network,
+    preprocessing,
+    svm,
+    tree,
+)
 from sklearn.metrics import classification_report
-
-import matplotlib.pyplot as plt
+from tpot import TPOTClassifier
+from tpot.config.classifier import classifier_config_dict
+from tpot.operator_utils import source_decode
 from yellowbrick.classifier import ConfusionMatrix
 
-import pandas as pd
-import numpy
 
-from tpot import TPOTClassifier
-from tpot import *
-import tpot
+def run_self_test():
+    """Exercise imports that TPOT resolves dynamically in a frozen build."""
+    import xgboost
+
+    flattened = np.ravel([[0], [1]])
+    if flattened.tolist() != [0, 1]:
+        raise RuntimeError("NumPy self-test failed.")
+    unavailable_operators = [
+        operator_name
+        for operator_name in classifier_config_dict
+        if source_decode(operator_name, verbose=0)[2] is None
+    ]
+    if unavailable_operators:
+        raise RuntimeError(
+            "TPOT operators missing from the frozen build: "
+            + ", ".join(unavailable_operators)
+        )
+
+    TPOTClassifier(
+        generations=1,
+        population_size=1,
+        cv=2,
+        config_dict="TPOT light",
+        disable_update_check=True,
+        verbosity=0,
+    )
+    print(
+        "TPOT self-test passed "
+        f"(TPOT classifier and XGBoost {xgboost.__version__})."
+    )
 
 
-def main():
+def write_progress(output_directory, percent, message):
+    """Publish a small status file that the Seg4D window can poll."""
+    status_path = os.path.join(output_directory, "automl_progress.json")
+    temporary_path = status_path + ".tmp"
+    with open(temporary_path, "w", encoding="utf-8") as status_file:
+        json.dump({"percent": percent, "message": message}, status_file)
+    os.replace(temporary_path, status_path)
 
-    # Import all the parameters form the CMD
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--i',type=str,help='Yaml configuration file')
-    parser.add_argument('--o',type=str,help='Output_directory')    
-    args=parser.parse_args()  
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog="tpot",
+        description="Seg4D TPOT AutoML console runtime.",
+    )
+    parser.add_argument("-i", "--input", dest="i", help="YAML configuration file.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="o",
+        help="Output directory (overrides the YAML value).",
+    )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="Validate the frozen AutoML runtime and exit.",
+    )
+    return parser
+
+
+def main(arguments=None):
+    parser = build_parser()
+    command_line = list(sys.argv[1:] if arguments is None else arguments)
+    if not command_line:
+        parser.print_help()
+        return 0
+    args = parser.parse_args(command_line)
+    if args.self_test:
+        run_self_test()
+        return
+    if not args.i:
+        parser.error("--input/--i is required unless --self-test is used")
 
     # Read the configuration from the YAML file for the set-up
-    with open(args.i, 'r') as yaml_file:
+    with open(args.i, "r", encoding="utf-8") as yaml_file:
         config_data = yaml.safe_load(yaml_file)
-    test_file= config_data.get('INPUT_POINT_CLOUD_TESTING')
-    train_file= config_data.get('INPUT_POINT_CLOUD_TRAINING')
-    output_directory= config_data.get('OUTPUT_DIRECTORY')
-    features2include_path= config_data.get('INPUT_FEATURES')                      
-    generations=config_data['CONFIGURATION']['generations']
-    population_size=config_data['CONFIGURATION']['population_size']
-    mutation_rate=config_data['CONFIGURATION']['mutation_rate']
-    crossover_rate=config_data['CONFIGURATION']['crossover_rate']
-    cv=config_data['CONFIGURATION']['cv']
-    max_time_mins=config_data['CONFIGURATION']['max_time_mins']
-    max_eval_time_mins=config_data['CONFIGURATION']['max_eval_time_mins']
-    early_stop=config_data['CONFIGURATION']['early_stop']
-    scoring=config_data['CONFIGURATION']['scoring']
+    test_file = config_data["INPUT_POINT_CLOUD_TESTING"]
+    train_file = config_data["INPUT_POINT_CLOUD_TRAINING"]
+    output_directory = os.path.abspath(
+        args.o or config_data["OUTPUT_DIRECTORY"]
+    )
+    features2include_path = config_data["INPUT_FEATURES"]
+    configuration = config_data["CONFIGURATION"]
+    generations = int(configuration["generations"])
+    population_size = int(configuration["population_size"])
+    mutation_rate = float(configuration["mutation_rate"])
+    crossover_rate = float(configuration["crossover_rate"])
+    cv = int(configuration["cv"])
+    max_time_mins = int(configuration["max_time_mins"])
+    max_eval_time_mins = int(configuration["max_eval_time_mins"])
+    early_stop_value = configuration.get("early_stop")
+    early_stop = (
+        None
+        if early_stop_value in (None, "", 0, "0")
+        else int(early_stop_value)
+    )
+    scoring = configuration["scoring"]
+    os.makedirs(output_directory, exist_ok=True)
     
     # There are an issue with the f1 score. This score only accepts 0 and 1 lables. So if you introduce 3 and 4 labels, for example, throws and error
-    if scoring=="f1":
-        scoring="f1_macro"
+    if scoring == "f1":
+        scoring = "f1_macro"
+    elif scoring == "precision":
+        scoring = "precision_macro"
 
     
     # test_file=args.te
@@ -90,76 +174,116 @@ def main():
     print("Scoring chosen = " + str(scoring))
     
     
-    #Store in a Pandas dataframe the content of the file
-    pcd_training=pd.read_csv(train_file,delimiter=' ')
-    pcd_testing=pd.read_csv(test_file,delimiter=' ')
+    write_progress(output_directory, 5, "Loading training and testing data...")
+    pcd_training = pd.read_csv(train_file, sep=r"\s+")
+    pcd_testing = pd.read_csv(test_file, sep=r"\s+")
     
     # Create the pandas with the features selected for the train and test case
-    labels2include= ['Classification']
+    labels2include = ["Classification"]
     pcd_training.dropna(inplace=True)
     pcd_testing.dropna(inplace=True)
-    labels_train=pcd_training[labels2include]
-    with open(features2include_path, "r") as file:
-        features2include = [line.strip().split(',') for line in file]    
-    features=pcd_training[features2include[0]]   
-    X_train=features
-    y_train=labels_train.to_numpy()
+    labels_train = pcd_training[labels2include]
+    with open(features2include_path, "r", encoding="utf-8") as file:
+        features2include = [
+            feature.strip()
+            for feature in file.read().split(",")
+            if feature.strip()
+        ]
+    if not features2include:
+        raise ValueError("At least one input feature must be selected.")
+    missing_training = sorted(set(features2include) - set(pcd_training.columns))
+    missing_testing = sorted(set(features2include) - set(pcd_testing.columns))
+    if missing_training or missing_testing:
+        raise ValueError(
+            "Selected features are missing. "
+            f"Training: {missing_training}; testing: {missing_testing}"
+        )
+
+    X_train = pcd_training[features2include]
+    y_train = labels_train.to_numpy()
     y_train_reshaped = np.ravel(y_train)
-    labels_evaluation=pcd_testing[labels2include]
-    features=pcd_testing[features2include[0]]
-    X_test=features
-    y_test=labels_evaluation.to_numpy()
-    y_test_reshaped=np.ravel(y_test)
+    labels_evaluation = pcd_testing[labels2include]
+    X_test = pcd_testing[features2include]
+    y_test = np.ravel(labels_evaluation.to_numpy())
+
+    if len(np.unique(y_train_reshaped)) < 2:
+        raise ValueError("The training cloud must contain at least two classes.")
+    smallest_class = int(pd.Series(y_train_reshaped).value_counts().min())
+    if cv > smallest_class:
+        raise ValueError(
+            f"Cross-validation ({cv}) exceeds the smallest class size "
+            f"({smallest_class})."
+        )
     
     # Create the pipeline for the TPOT
     pipeline_optimizer = TPOTClassifier(
-                                        generations=int(generations),
-                                        population_size=int(population_size),
-                                        mutation_rate=float(mutation_rate),
-                                        crossover_rate=float(crossover_rate),
-                                        scoring=scoring,
-                                        cv=int(cv),
-                                        max_time_mins=int(max_time_mins),
-                                        max_eval_time_mins=int(max_eval_time_mins),
-                                        early_stop=int(early_stop),
-                                        random_state=None,
-                                        verbosity=2,
-                                        use_dask=False
-                                        )
+        generations=generations,
+        population_size=population_size,
+        mutation_rate=mutation_rate,
+        crossover_rate=crossover_rate,
+        scoring=scoring,
+        cv=cv,
+        max_time_mins=max_time_mins,
+        max_eval_time_mins=max_eval_time_mins,
+        early_stop=early_stop,
+        random_state=None,
+        verbosity=2,
+        use_dask=False,
+        n_jobs=1,
+        disable_update_check=True,
+    )
        
     
     # Run the TPOT with the training data and the pipeline
+    write_progress(output_directory, 10, "Optimizing the classification pipeline...")
     pipeline_optimizer.fit(X_train, y_train_reshaped)
    
     
     # Serialize the best pipeline (model) into a .pkl file
-    joblib.dump(pipeline_optimizer.fitted_pipeline_,os.path.join(output_directory, 'best_pipeline.pkl'))  # Replace 'fitted_pipeline_' with the appropriate attribute
+    write_progress(output_directory, 88, "Saving the best pipeline...")
+    best_pipeline_path = os.path.join(output_directory, "best_pipeline.pkl")
+    joblib.dump(pipeline_optimizer.fitted_pipeline_, best_pipeline_path)
     
     # Load the pickled model 
-    loaded_model = joblib.load(os.path.join(output_directory, 'best_pipeline.pkl'))    
+    loaded_model = joblib.load(best_pipeline_path)
 
     # Prediction
     y_pred = loaded_model.predict(X_test)
     
     # Save the model to a file
-    joblib.dump(loaded_model, os.path.join(output_directory, 'model.pkl'))
+    joblib.dump(loaded_model, os.path.join(output_directory, "model.pkl"))
+    pipeline_optimizer.export(
+        os.path.join(output_directory, "best_pipeline.py")
+    )
     
     # Create the confusion matrix
-    cm= ConfusionMatrix(loaded_model, cmap='Blues')
-    cm.score (X_test,y_test)
-    cm.show(outpath=os.path.join(output_directory, 'confusion_matrix.png'))  # Save the confusion matrix to a file
+    write_progress(output_directory, 93, "Creating evaluation reports...")
+    cm = ConfusionMatrix(loaded_model, cmap="Blues")
+    cm.score(X_test, y_test)
+    cm.show(
+        outpath=os.path.join(output_directory, "confusion_matrix.png"),
+        clear_figure=True,
+    )
     
     # Create the classification report
-    report=classification_report(y_test, y_pred)
+    report = classification_report(y_test, y_pred, zero_division=0)
     # Write the report to a file
-    with open(os.path.join(output_directory,'classification_report.txt'), 'w') as file:
+    with open(
+        os.path.join(output_directory, "classification_report.txt"),
+        "w",
+        encoding="utf-8",
+    ) as file:
         file.write(report)
     
     # Create the final point cloud with a layer of predictions
-    pcd_testing_subset = pcd_testing[['X', 'Y', 'Z']].copy()
-    pcd_testing_subset['Predictions'] = y_pred
+    pcd_testing_subset = pcd_testing[["X", "Y", "Z"]].copy()
+    pcd_testing_subset["Predictions"] = y_pred
     # Saving the DataFrame to a CSV file
-    pcd_testing_subset.to_csv(os.path.join(output_directory, 'predictions.txt'), index=False)
+    pcd_testing_subset.to_csv(
+        os.path.join(output_directory, "predictions.txt"), index=False
+    )
+    write_progress(output_directory, 100, "AutoML completed.")
 
-if __name__=='__main__':
- 	main()
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,11 @@
+# Windows x64 / Python 3.8 / CUDA 11.3 compatibility profile.
+--extra-index-url https://download.pytorch.org/whl/cu113
+--find-links https://data.pyg.org/whl/torch-1.12.0+cu113.html
+# Never silently compile a different native ABI from source.
+--only-binary=numpy,torch,torch-scatter,spconv-cu113,cumm-cu113
+numpy==1.24.3
+torch==1.12.1+cu113
+torch-scatter==2.0.9
+spconv-cu113==2.3.6
+cumm-cu113==0.4.11
+ninja==1.11.1.1

@@ -14,7 +14,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 
-import open3d as o3d
 import numpy as np
 
 
@@ -27,6 +26,7 @@ additional_modules_directory=os.path.sep.join(path_parts[:-2])+ '\main_module'
 sys.path.insert(0, additional_modules_directory)
 from main import P2p_getdata,get_istance,get_point_clouds_name, check_input, write_yaml_file
 from main_gui import show_features_window, definition_of_labels_type_1,definition_of_entries_type_1, definition_of_combobox_type_1,definition_ok_cancel_buttons_type_1,definition_run_cancel_buttons_type_1, definition_of_buttons_type_1
+from geometry_compat import write_voxel_mesh_ply
 
 #%% CREATE A INSTANCE WITH THE ELEMENT SELECTED
 CC = pycc.GetInstance() 
@@ -127,27 +127,8 @@ class GUI_voxelize(tk.Frame):
             # Save the point cloud with the features selected
             input_file=os.path.join(self.output_directory,"input_point_cloud.ply")
             
-            # Transform the selected point cloud to a open3d point cloud
-            pcd = o3d.geometry.PointCloud()            
-            pcd.points = o3d.utility.Vector3dVector(input_pcd.values)
-            
-            # Create the voxel model from the pcd point cloud
-            voxel_grid=o3d.geometry.VoxelGrid.create_from_point_cloud(pcd,voxel_size=v_size)
-            voxels=voxel_grid.get_voxels()
-            vox_mesh=o3d.geometry.TriangleMesh()
-            for v in voxels:
-                cube=o3d.geometry.TriangleMesh.create_box(width=1, height=1,
-                depth=1)
-                cube.paint_uniform_color(v.color)
-                cube.translate(v.grid_index, relative=False)
-                vox_mesh+=cube
-            vox_mesh.translate([0.5,0.5,0.5], relative=True)
-            vox_mesh.scale(v_size, [0,0,0])
-            vox_mesh.translate(voxel_grid.origin, relative=True)
-            vox_mesh.merge_close_vertices(0.0000001)
-            
             # Save the file and then load the file with cloudcompare. It is used a temporal folder for this process. Finally the temporal file is deleted
-            o3d.io.write_triangle_mesh(input_file,vox_mesh)        
+            write_voxel_mesh_ply(input_file, input_pcd.values, v_size)
             params = pycc.FileIOFilter.LoadParameters()
             params.alwaysDisplayLoadDialog=False
             CC.loadFile(input_file, params)

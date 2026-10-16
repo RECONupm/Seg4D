@@ -1,0 +1,42 @@
+import ast
+import importlib.metadata
+import json
+from pathlib import Path
+import sys
+import tempfile
+import types
+import importlib.util
+import numpy as np
+import torch
+
+root=Path.cwd()
+out=root/'docs/revision-tecnica-2026-10-08'
+def extract(path,names,ns):
+    tree=ast.parse((root/path).read_text(encoding='utf-8-sig'))
+    nodes=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name in names]
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),str(path),'exec'),ns)
+    return ns
+ns=extract('segmentation_methods/point_transformer_v3/runtime_common.py',['read_point_table','spatial_patches'],{'np':np})
+with tempfile.TemporaryDirectory(dir=out) as folder:
+    p=Path(folder)/'cloud.txt'; p.write_text('X Y Z\n500000.001 4500000.001 1\n500000.011 4500000.011 1\n')
+    header,values=ns['read_point_table'](p)
+    precision={'coordinates':values.tolist(),'distinct_x':len(np.unique(values[:,0])),'distinct_y':len(np.unique(values[:,1]))}
+    patches=ns['spatial_patches'](np.zeros((65,3)),32)
+    package=types.ModuleType('review_serialization'); package.__path__=[str(root/'segmentation_methods/point_transformer_v3/serialization')]; sys.modules[package.__name__]=package
+    spec=importlib.util.spec_from_file_location('review_serialization.default',root/'segmentation_methods/point_transformer_v3/serialization/default.py')
+    module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    generator=torch.Generator().manual_seed(42)
+    serialization=[]
+    for depth in (1,4,8,16):
+        coords=torch.randint(0,2**depth,(100,3),generator=generator)
+        batch=torch.randint(0,3,(100,),generator=generator)
+        for order in ('z','hilbert'):
+            try:
+                code=module.encode(coords,batch,depth,order); decoded,decoded_batch=module.decode(code,depth,order)
+                serialization.append({'depth':depth,'order':order,'roundtrip_ok':bool(torch.equal(coords,decoded) and torch.equal(batch,decoded_batch))})
+            except Exception as e:
+                serialization.append({'depth':depth,'order':order,'exception':type(e).__name__,'message':str(e)})
+results={'python':sys.version,'torch':torch.__version__,'cuda':torch.version.cuda,'gpu_available':torch.cuda.is_available(),'float32_coordinate_precision':precision,'patch_sizes_for_65_points_limit_32':[len(x) for x in patches],'serialization_cpu':serialization,'runtime_versions':{name:importlib.metadata.version(name) for name in ['torch','numpy','spconv-cu113','torch-scatter']}}
+(out/'comprobaciones-ptv3.json').write_text(json.dumps(results,indent=2),encoding='utf-8')
+print(json.dumps(results,indent=2))
+

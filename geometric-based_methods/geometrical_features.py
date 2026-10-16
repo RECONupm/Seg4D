@@ -17,6 +17,7 @@ from tkinter import messagebox
 from tkinter import filedialog
 import traceback
 import pandas as pd
+import numpy as np
 
 # #CloudCompare Python Plugin
 import cccorelib
@@ -26,11 +27,15 @@ import pycc
 script_directory = os.path.abspath(__file__)
 path_parts = script_directory.split(os.path.sep)
 
-additional_modules_directory=os.path.sep.join(path_parts[:-2])+ '\main_module'
+additional_modules_directory = os.path.join(
+    os.path.sep.join(path_parts[:-2]), "main_module"
+)
 
 sys.path.insert(0, additional_modules_directory)
 from main import P2p_getdata,get_istance,get_point_clouds_name, check_input, write_yaml_file
 from main_gui import show_features_window, definition_of_labels_type_1,definition_of_entries_type_1, definition_of_checkbutton_type_1, definition_of_combobox_type_1,definition_ok_cancel_buttons_type_1,definition_run_cancel_buttons_type_1, definition_of_buttons_type_1
+from point_cloud_processing import CUSTOM_FEATURE_NAMES, compute_custom_features
+from supervoxel_processing import aggregate_features_by_supervoxel
 #%% ADDING PATHS FROM THE CONFIGS FILES
 current_directory= os.path.dirname(os.path.abspath(__file__))
 
@@ -63,7 +68,8 @@ class GUI_gf(tk.Frame):
             "Verticality",
             "Nx",
             "Ny",
-            "Nz"
+            "Nz",
+            *CUSTOM_FEATURE_NAMES,
         ]
         self.selected_params = []
         self.values_list=[]
@@ -125,23 +131,6 @@ class GUI_gf(tk.Frame):
         form_frame.pack()
         
         # Labels
-        params = [
-            "Eigenvalue sum",
-            "Omnivariance",
-            "Eigenentropy",
-            "Anisotropy",
-            "Planarity",
-            "Linearity",
-            "PCA1",
-            "PCA2",
-            "Surface Variation",
-            "Sphericity",
-            "Verticality",
-            "Nx",
-            "Ny",
-            "Nz"
-        ]
-        
         # Variables to store the state of checkbuttons
         vars_params = [tk.BooleanVar() for _ in range(len(self.initial_params))]
 
@@ -165,6 +154,13 @@ class GUI_gf(tk.Frame):
         entry_radius = ttk.Entry(form_frame, width=30)
         entry_radius.insert(0, self.parameters["radius"])
         entry_radius.grid(row=4, column=2, sticky="w", pady=2)
+
+        aggregate_supervoxels = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            form_frame,
+            text="Aggregate paper-derived features by Supervoxel ID",
+            variable=aggregate_supervoxels,
+        ).grid(row=9, column=2, sticky="w", pady=3)
         
         # Combobox
         combo_point_cloud=ttk.Combobox (form_frame,values=name_list)
@@ -173,7 +169,13 @@ class GUI_gf(tk.Frame):
         
         # Create a vertical line (separator) in the middle of the window
         separator = ttk.Separator(form_frame, orient="vertical")
-        separator.grid(row=0, column=1, rowspan=13, sticky="ns", padx=5)
+        separator.grid(
+            row=0,
+            column=1,
+            rowspan=len(self.initial_params) + 1,
+            sticky="ns",
+            padx=5,
+        )
         
         
         # Buttons
@@ -188,7 +190,7 @@ class GUI_gf(tk.Frame):
                                        ) 
         _=definition_run_cancel_buttons_type_1("form_frame",
                                      [lambda:run_algorithm_1(self,name_list,combo_point_cloud.get(), str(entry_radius.get())),lambda:destroy(self)],
-                                     13,
+                                     len(self.initial_params) + 1,
                                      form_frame,
                                      2
                                      )
@@ -209,11 +211,51 @@ class GUI_gf(tk.Frame):
             else:
                 print("The features " + str(self.selected_params) + " have been included")
             
-            # To adapt the names to the jackteristic library
-            selected_features_lower = [feature.lower().replace(' ', '_') if feature not in ['PCA1', 'PCA2'] else feature for feature in self.selected_params]
-     
-            # To adapt the radius to the jackteristic library
-            radius = [float(x) for x in radius.split()]
+            if not self.selected_params:
+                messagebox.showerror(
+                    "Missing features",
+                    "Select at least one feature to compute.",
+                    parent=window,
+                )
+                progress.stop()
+                return
+
+            # Keep Jakteristics features and paper-derived features separate.
+            custom_features = [
+                feature
+                for feature in self.selected_params
+                if feature in CUSTOM_FEATURE_NAMES
+            ]
+            jakteristics_features = [
+                feature
+                for feature in self.selected_params
+                if feature not in CUSTOM_FEATURE_NAMES
+            ]
+            selected_features_lower = [
+                feature.lower().replace(' ', '_')
+                if feature not in ['PCA1', 'PCA2']
+                else feature
+                for feature in jakteristics_features
+            ]
+
+            try:
+                radius = [float(x) for x in radius.split()]
+            except ValueError:
+                messagebox.showerror(
+                    "Invalid radius",
+                    "Enter one or more numeric search radii separated by spaces.",
+                    parent=window,
+                )
+                progress.stop()
+                return
+            if not radius or any(value <= 0 for value in radius):
+                messagebox.showerror(
+                    "Invalid radius",
+                    "Every search radius must be greater than zero.",
+                    parent=window,
+                )
+                progress.stop()
+                return
             
             # Check if the selection is a point cloud
             pc_training=check_input(name_list,pc_training_name)
@@ -226,27 +268,79 @@ class GUI_gf(tk.Frame):
             
             features_pcd[['X', 'Y', 'Z']].to_csv(input_path_point_cloud,sep=' ',header=True,index=False)
             
-            # YAML file
-            yaml = {
-                'ALGORITHM': "Jakterisitcs",
-                'INPUT_POINT_CLOUD': input_path_point_cloud,
-                'OUTPUT_DIRECTORY': self.output_directory,
-                'CONFIGURATION': {
-                    'input_features': selected_features_lower,
-                    'radius': radius
+            configuration_path = os.path.join(
+                self.output_directory, "algorithm_configuration.yaml"
+            )
+            if jakteristics_features:
+                yaml = {
+                    'ALGORITHM': "Jakterisitcs",
+                    'INPUT_POINT_CLOUD': input_path_point_cloud,
+                    'OUTPUT_DIRECTORY': self.output_directory,
+                    'CONFIGURATION': {
+                        'input_features': selected_features_lower,
+                        'radius': radius
+                        }
                     }
-                }
-            
-            write_yaml_file (self.output_directory,yaml)
-            
-            # RUN THE COMMAND LINE      
-            command = path_jakteristics + ' --i "' + os.path.join(self.output_directory,'algorithm_configuration.yaml') + '" --o "' + self.output_directory + '"'
-            os.system(command)
+
+                write_yaml_file (self.output_directory,yaml)
+
+                command = [
+                    path_jakteristics,
+                    "--input",
+                    configuration_path,
+                    "--output",
+                    self.output_directory,
+                ]
+                subprocess.run(
+                    command,
+                    check=True,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+                pcd_prediction = pd.read_csv(
+                    os.path.join(self.output_directory, 'pc_computed.txt'),
+                    sep=' ',
+                )
+            else:
+                pcd_prediction = features_pcd[['X', 'Y', 'Z']].copy()
+
+            if custom_features:
+                progress.setMethodTitle(
+                    "Computing PFH, direction and elevation features..."
+                )
+                xyz = np.asarray(
+                    features_pcd[['X', 'Y', 'Z']].values,
+                    dtype=np.float64,
+                )
+                custom_result = compute_custom_features(
+                    xyz,
+                    radius,
+                    custom_features,
+                    progress_callback=lambda fraction: progress.update(
+                        float(fraction) * 100
+                    ),
+                )
+                if aggregate_supervoxels.get():
+                    if "Supervoxel ID" not in features_pcd.columns:
+                        raise ValueError(
+                            "Supervoxel aggregation requires the 'Supervoxel ID' "
+                            "field. Run Supervoxel computation first."
+                        )
+                    field_names = list(custom_result)
+                    feature_matrix = np.column_stack(
+                        [custom_result[name] for name in field_names]
+                    )
+                    feature_matrix = aggregate_features_by_supervoxel(
+                        feature_matrix,
+                        features_pcd["Supervoxel ID"].values,
+                    )
+                    custom_result = {
+                        f"sv_mean_{name}": feature_matrix[:, index]
+                        for index, name in enumerate(field_names)
+                    }
+                for field_name, values in custom_result.items():
+                    pcd_prediction[field_name] = values
 
             # CREATE THE RESULTING POINT CLOUD 
-            
-            # Load the predictions
-            pcd_prediction = pd.read_csv(os.path.join(self.output_directory,'pc_computed.txt'), sep=' ')  # Use sep='\t' for tab-separated files  
             
             # EXTRACT COLUMN NAMES FOR SCALAR FIELDS
             scalar_fields = list(pcd_prediction.columns[3:])  # Exclude first three columns (X, Y, Z)
@@ -270,8 +364,11 @@ class GUI_gf(tk.Frame):
             
             # Revome files
             os.remove(os.path.join(self.output_directory, 'input_point_cloud.txt'))
-            os.remove(os.path.join(self.output_directory, 'pc_computed.txt'))
-            os.remove(os.path.join(self.output_directory, 'algorithm_configuration.yaml'))
+            computed_path = os.path.join(self.output_directory, 'pc_computed.txt')
+            if os.path.isfile(computed_path):
+                os.remove(computed_path)
+            if os.path.isfile(configuration_path):
+                os.remove(configuration_path)
             
             # Stop the progress bar
             progress.stop() 

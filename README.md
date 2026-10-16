@@ -1,122 +1,140 @@
-![title](https://github.com/Luisjupm/Seg4D/assets/107433987/07a2e9ef-6ae5-4121-a1aa-df4e7101e47a)
+![Seg4D](https://github.com/Luisjupm/Seg4D/assets/107433987/07a2e9ef-6ae5-4121-a1aa-df4e7101e47a)
 
-Plugin developed within the framework of the research project CAREEN (APOYO-JOVENES-21-RCDT1L-85- SL9E1R). This plugin allows to extend the functionalities of CloudCompare to support the diagnosis of historical constructions.
+# Seg4D
 
-# Getting started
-Be sure to check the [Documentation](https://github.com/Luisjupm/Seg4D/blob/main/assets_sheets/guide_construction-system-segmentation.pdf), which features detailed explanations on how the program works and a User Manual.
+Seg4D extends CloudCompare with tools for segmentation and geometric analysis
+of historic constructions from 3D point clouds. It was developed within the
+CAREEN research project (APOYO-JOVENES-21-RCDT1L-85-SL9E1R).
 
-# Download
-The download link is as follows: [Seg4d Installer](https://drive.upm.es/s/vKEtCr6SgbCUKbG)
+## Start here
 
-You can find out how to install Seg4D in the [Installation Guide](https://github.com/Luisjupm/Seg4D/blob/main/installer/seg4d_installation_guide.pdf).
+| What you want to do | Guide |
+|---|---|
+| Install and use a supplied Windows binary | [Installation, updates and troubleshooting](INSTALLATION.md) |
+| Compile the processing programs and final installer | [Windows build guide](BUILDING.md) |
+| Build using VS Code, F5 and tasks | [VS Code workflow](docs/vscode.md) |
+| Prepare the PTv3 CUDA environment | [Point Transformer V3 build](docs/point-transformer-v3-build.md) |
+| Understand inclined-beam deflection settings/results | [Deflection Analysis](docs/deflection-analysis.md) |
 
-Seg4D is available on Windows as a plugin for CloudCompare (2.13) thanks to CloudCompare PythonRuntime (see References). You can download the latest version of CloudCompare (Windows installer version) including the CloudCompare PythonRuntime plugin here:
+These guides describe **this source tree**. Its host target is Windows x64,
+CloudCompare 2.14 with **CPython 3.13 PythonRuntime**. Older installers and PDF
+screenshots may describe the earlier 2.13 workflow. Verify the embedded Python
+and the supplied installer's compatibility rather than simply choosing "latest".
+The [official CloudCompare download page](https://www.danielgm.net/cc/release/)
+lists 2.14 as beta as of 16 October 2026.
 
-[CloudCompare](https://www.danielgm.net/cc/)
+## Install a supplied binary
 
-Simply install the latest version of CloudCompare and tick the Python checkbox during installation:
+1. Install the matching CloudCompare x64 build with its PythonRuntime component,
+   into a clean directory.
+2. Obtain a matching Seg4D installer from the maintainer. The existing
+   [external download](https://drive.upm.es/s/vKEtCr6SgbCUKbG) is separate from
+   the Git source; check that package's supported host before installing it.
+3. Close CloudCompare, run `SEG4D_Installer Setup.exe`, and select the directory
+   containing the intended `CloudCompare.exe`. Internet is required while its
+   pinned Python dependencies are installed.
+4. Restart CloudCompare and open the **Seg4D** action in its Python plugin.
 
-![ccpp](https://github.com/Luisjupm/Seg4D/assets/107433987/71bf7405-c45e-48fb-9334-7d44d65f578b)
+Installer users do not need Conda, VS Code or Inno Setup. The source ZIP does
+not replace the compiled installer. For exact paths, verification commands,
+updates and common errors, follow [INSTALLATION.md](INSTALLATION.md).
 
-**Seg4D plugin in CloudCompare.**
-![open1b](https://github.com/Luisjupm/Seg4D/assets/107433987/156c4ea9-1caa-4da5-ada3-c80e85a8b22b)
+## Build from source
 
-![open3](https://github.com/Luisjupm/Seg4D/assets/107433987/5bd03527-dcbe-4345-82c6-8df9578c979f)
+Use Windows x64 with Git, a Python 3.10+ build driver, Conda, PowerShell and
+Inno Setup 6/7. `--bootstrap` creates the separate `pointcept` environment and
+downloads its pinned CUDA dependencies automatically. A compatible NVIDIA
+GPU/driver is still required for PTv3's CUDA check.
 
-**Seg4D plugin GUI.**
-![Captura de pantalla 2024-05-22 122517](https://github.com/Luisjupm/Seg4D/assets/107433987/2a84dd3b-5d17-4ca4-8d3f-852e7cc64ad1)
+```powershell
+git clone https://github.com/RECONupm/Seg4D.git
+cd Seg4D
+```
 
-# Run the code
+After the prerequisites in [BUILDING.md](BUILDING.md) and
+[the GPU guide](docs/point-transformer-v3-build.md) are satisfied:
 
-**1. Download from GitHub**
+```powershell
+python .\create_installer.py --build-executables --bootstrap
+```
 
-Press "<> Code" and select "Download ZIP"
+This explicitly builds/checks all six runtimes, then creates
+`installer\SEG4D_Installer Setup.exe`.
 
-**2. Install CloudCompare and Python-Plugin for CloudCompare**
+To also include the legacy PTv1 runtime, install 7-Zip and add
+`--include-legacy-point-transformer`. The builder downloads its 1.80 GiB archive
+from the documented UPM share automatically and reuses it on later builds.
+See [external payloads and Git size limits](docs/external-payloads.md).
 
-First of all, you will need to have CloudCompare and its CloudCompare-PythonPlugin extension installed. The latest version of CloudCompare (2.13.1) already contains the CloudCompare-PythonPlugin extension. You can download it here:
+For a later application-script update with complete bundles already present:
 
-https://www.danielgm.net/cc/
+```powershell
+python .\create_installer.py
+```
 
-Please note to select the «Install the Python and 3DFin plugins» button in the first CloudCompare® installation window.
+That command reuses existing processing bundles. Changes to frozen algorithm
+sources require a targeted rebuild; see the build guide. `auto-py-to-exe` is not
+required. Host dependencies and standalone Python environments are separate.
 
-![image](https://github.com/Luisjupm/Seg4D/assets/107433987/35ff8a80-e2d5-4abb-a996-cbe1384e29d0)
+### VS Code
 
-In case you already have the CloudCompare application installed without the extension, this page informs you about the steps to download it:
+Open the repository root, install its recommended Python/Python Debugger and
+PowerShell extensions, and select a build-driver interpreter. Use **Run and
+Debug > select configuration > F5** for a full build or installer packaging.
+Use **Terminal > Run Task** to choose a single runtime or run diagnostics.
+[The VS Code guide](docs/vscode.md) lists every configuration, prerequisite and
+expected output. Running `seg4d.py` in a normal VS Code Python does not provide
+CloudCompare's `pycc` API.
 
-https://tmontaigu.github.io/CloudCompare-PythonRuntime/building.html#building-as-plugin
+## Runtime/build layout
 
-**3. Compile libraries**
+| Location | Purpose |
+|---|---|
+| `seg4d.py`, `seg4d_plugin/` | Main GUI and CloudCompare launcher |
+| `main_module/` | Shared geometry, features, execution and deflection calculations |
+| `geometric-based_methods/`, `radiometric-based_methods/`, `other_methods/` | Tool interfaces |
+| `segmentation_methods/` | Classical ML, AutoML and deep-learning interfaces |
+| `scripts/executable-builds.json` | Target Python versions, environments, entry points and bundle paths |
+| `scripts/requirements/` | Active standalone build dependency pins |
+| `pre-requisites/cloudcompare-python313.txt` | Private host dependencies for the current PythonRuntime ABI |
+| `.vscode/` | Portable F5, task and extension configuration |
+| `create_installer.py`, `seg4d-installer-x64.iss` | Final Windows installer build |
+| `tests/` | Numerical and simulated-adapter regression tests |
+| `assets_sheets/` | Existing scientific/user-method PDF guides |
 
-Once the software is installed, the next step is to compile executables that work with other libraries, such as Scikit Learn, TPOT, Point Transformer, etc.
+Generated `*_runtime` directories, `.build` and installer EXEs are build/release
+artifacts. Legacy PTv1, some examples and modified third-party payloads are
+optional external inputs, not automatically downloaded by the normal build.
+PotreeConverter is a separate supplied third-party executable. See BUILDING for
+the complete target list and payload requirements.
 
-- The first step is to create a 'conda' environment with the Python 3.10 version for each executable to be compiled.
+## Manuals and interface examples
 
-- The second step is to import the necessary libraries for each environment. To do this, inside the folder 'conda_env' is each of the environments that have to be created. Inside each folder there is a file called 'requirements.txt' that will have to be used to import all the necessary libraries.
+The existing scientific guides cover
+[construction-system segmentation](assets_sheets/guide_construction-system-segmentation.pdf),
+[damage evaluation](assets_sheets/guide_damage-evaluation.pdf) and
+[other methods](assets_sheets/guide_other-methods.pdf).
+The [archived installation PDF](installer/seg4d_installation_guide.pdf) is retained
+for older distributions; the Markdown installation/build guides above describe
+the current tree.
 
-- The third and last step will be to compile the executable. To do this, you will have to install the auto-py-to-exe library in each environment by cmd (pip install auto-py-to-exe). Then, via cmd, inside the corresponding environment, you will compile the executable. In the Input you will put the path of the .py file (1), which is inside the 'conda-env' folder and in the Output you will put the path where it has to be found (2) before you press convert .py yo .exe (3). You can see in the following section the path you must put in the output (2):
+Screenshots below illustrate earlier interfaces and may differ from the current build.
 
-"jakteristics-0.6.0" --> geometric-based_methods folder
+![Seg4D action in CloudCompare](https://github.com/Luisjupm/Seg4D/assets/107433987/156c4ea9-1caa-4da5-ada3-c80e85a8b22b)
 
-"point_transformer" --> segmentation_methods folder
+![Seg4D interface](https://github.com/Luisjupm/Seg4D/assets/107433987/2a84dd3b-5d17-4ca4-8d3f-852e7cc64ad1)
 
-"optimal_flow-0.1.11" --> segmentation_methods folder
+## Verification and publication status
 
-"scikit-learn-1.3.2" --> segmentation_methods folder
+Use the installation diagnostic and the target-specific smoke tests before
+distributing a build. Unit tests and a successful import check do not substitute
+for running the real plugin in CloudCompare or validating a clean installation.
 
-"tpot-0.12.1" --> segmentation_methods folder
+The [16 October 2026 documentation review](docs/documentation-review-2026-10-16.md)
+records differences between published GitHub main and this development checkout.
+Publish the matching source/build tooling with these instructions; README alone
+cannot make an older checkout support the new commands.
 
-![autopy](https://github.com/Luisjupm/Seg4D/assets/107433987/9a160b92-11eb-4b94-b178-01171a798b99)
-
-**4. Add script on Python-Plugin**
-
-Open CloudCompare and in the Python Plugin tab select "Script Register", then select "Add Script" and then look in the folder downloaded from GitHub, seg4d.py, which is the code that opens the whole program. If you only want to open a specific tool, go to the folders containing the .py files (see "Folders structure" section below) and select the one you want.
-
-![add_script](https://github.com/Luisjupm/Seg4D/assets/107433987/5e8177a0-93cd-4e16-9680-1eec57d64248)
-
-# Folders structure
-
-- assets: Pictures for "About" tab.
-
-- assets_sheets: Seg4d user guides.
-
-- configs: Yaml file for execute ".exe" files.
-
-- geometric-based_methods: Scripts files and executables of geometric based methods
-	- "analysis_of_arches.py"
-	- "analysis_of_deflections.py"
-	- "analysis_of_inclinations.py"
-	- "analysis_of_vaults.py"
-	- "geometrical_features.py" and the executable "jakteristics-0.6.0"
-
-- installer: Installation user guide.
-
-- licenses: Licences of the libraries implemented in the software.
-
-- main_module: Scripts files with functions imported to other scripts.
-	- "main.py"
-	- "main_gui.py"
-	- "ransac.py"
-
-- other_methods: Scripts files of other methods.
-	- "anisotropic_denoising.py"
-	- "potree_converter.py"
-	- "voxelize.py"
-
-- point_cloud_examples: ".bin" files with point cloud examples to train the different methods.
-
-- pre-requisites: Requirements of libraries versions and CloudCompare-PythonPlugin install package.
-
-- radiometric-based_methods: Scripts files of radiometic based methods
-	- "color_conversion.py"
-	- "stadistical_features.py"
-
-- seg4d_plugin: Boot files.
-
-- segmentation_methods: Scripts files and executables of segmentation methods
-	- "deep_learning_segmentation.py" and the executable "point_transformer" 
-	- "supervised_machine_learning.py" and the executables "optimal_flow-0.1.11", "scikit-learn-1.3.2" and "tpot-0.12.1"
-	- "unsupervised_machine_learning.py" and the executable "scikit-learn-1.3.2"
 
 # Citing Seg4D
 Sánchez-Aparicio, L.J.; Santamaría-Maestro, R.; Sanz-Honrado, P.; Villanueva-Llauradó, P.; Aira-Zunzunegui, J.R.; González-Aguilera, D. A Holistic Solution for Supporting the Diagnosis of Historic Constructions from 3D Point Clouds. Remote Sens. 2025, 17, 2018. https://doi.org/10.3390/rs17122018

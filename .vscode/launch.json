@@ -1,0 +1,84 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Build ALL runtimes + Seg4D installer (first/full)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/create_installer.py",
+            "args": [
+                "--build-executables",
+                "--bootstrap"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Build ALL runtimes + Seg4D installer (reuse environments)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/create_installer.py",
+            "args": [
+                "--build-executables"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Build Seg4D installer",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/create_installer.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Build TPOT executable",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/conda_env/segmentation_methods/tpot-0.12.1/create_executable.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Run Seg4D tests (selected interpreter)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "unittest",
+            "args": [
+                "discover",
+                "-s",
+                "tests",
+                "-v"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Build Point Transformer V3 executable",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/segmentation_methods/point_transformer_v3/create_executable.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Build installer with legacy PTv1 (automatic download)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/create_installer.py",
+            "args": [
+                "--include-legacy-point-transformer"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

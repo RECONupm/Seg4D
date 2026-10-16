@@ -9,7 +9,6 @@ import sys
 import traceback
 import os
 import numpy as np
-import open3d as o3d
 
 #CloudCompare Python Plugin
 import cccorelib
@@ -121,13 +120,12 @@ class GUI_sf(tk.Frame):
             pcd=P2p_getdata(pc)
             array_f=pcd[self.features2include].values
             
-            # Pass xyz to Open3D.o3d.geometry.PointCloud and visualize
-            pcdxyz = o3d.geometry.PointCloud()
-            pcdxyz.points = o3d.utility.Vector3dVector(pcd.values[:,0:3])
-            pcdxyz_tree = o3d.geometry.KDTreeFlann(pcdxyz)
+            # Build a SciPy radius-search tree (Open3D has no CPython 3.13 wheel).
+            xyz = np.asarray(pcd.values[:,0:3], dtype=np.float64)
+            pcdxyz_tree = cKDTree(xyz)
             
             # Pre-compute lengths and prepare data structures
-            num_points = len(pcdxyz.points)
+            num_points = len(xyz)
             if selected_mean:
                 mean_values= np.zeros(num_points)
             if selected_std:
@@ -154,8 +152,9 @@ class GUI_sf(tk.Frame):
                 if i % one_percent == 0:
                     progress.update ((i / num_points) * 100)
                 
-                [k, idx, _] = pcdxyz_tree.search_radius_vector_3d(pcdxyz.points[i], radius)
-                filtered_array = array_f[idx[1:]]+array_f[i]
+                idx = pcdxyz_tree.query_ball_point(xyz[i], radius)
+                neighbor_indices = [index for index in idx if index != i]
+                filtered_array = array_f[neighbor_indices]+array_f[i]
                 
                 if selected_mean:
                     # Calculate the mean value and standard deviation of the data
@@ -248,4 +247,4 @@ if __name__ == "__main__":
         print("An error occurred during the computation of the algorithm:", e)
         # Optionally, print detailed traceback
         traceback.print_exc()
-        window.destroy()  
+        window.destroy()

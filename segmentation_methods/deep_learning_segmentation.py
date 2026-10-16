@@ -29,6 +29,7 @@ additional_modules_directory=os.path.sep.join(path_parts[:-2])+ '\main_module'
 sys.path.insert(0, additional_modules_directory)
 from main import P2p_getdata,get_istance,get_point_clouds_name, check_input
 from main_gui import show_features_window, definition_of_labels_type_1,definition_run_cancel_buttons_type_1, definition_of_buttons_type_1
+from execution_logging import execution_failure_message, run_logged_command
 
 #%% ADDING PATHS FROM THE CONFIGS FILES
 current_directory= os.path.dirname(os.path.abspath(__file__))
@@ -118,7 +119,7 @@ class GUI_dl(tk.Frame):
         # GENERAL CONFIGURATION OF THE GUI
         
         # Configuration of the window        
-        root.title ("Supervised Deep Learning segmentation")
+        root.title ("Point Transformer V1")
         root.resizable (False, False)     
         root.attributes ('-toolwindow',-1) # Remove minimize and maximize button 
         
@@ -304,8 +305,9 @@ class GUI_dl(tk.Frame):
             
             # Directories for the command
             input_features= os.path.join(self.output_directory,'feature_file.txt')
-            output_log_file=os.path.join(self.output_directory, 'output.log')
-            training_script = os.path.join(current_directory,'point_transformer','training.py ')
+            training_script = os.path.join(
+                current_directory, 'point_transformer', 'training.py'
+            )
             output_directory_training=self.output_directory
             train_file= os.path.join(self.output_directory, 'input_point_cloud_training.txt')
             test_file= os.path.join(self.output_directory, 'input_point_cloud_testing.txt')
@@ -338,9 +340,52 @@ class GUI_dl(tk.Frame):
                     break
             classification= class_numeric
             progress.setMethodTitle("Running the classifier...")  
-            os.chdir(directory_bat)            
-            command = f'{directory_bat}/env/point_transformer_v1/Scripts/activate.bat && python -u "{training_script}" --train "{train_file}" --test "{test_file}" --features {features} --labels {classification} --size {gpu} --epoch {epoch} --output "{output_directory_training}" > "{output_log_file}"'
-            os.system(command)
+            activation_script = os.path.join(
+                directory_bat,
+                "env",
+                "point_transformer_v1",
+                "Scripts",
+                "activate.bat",
+            )
+            command_text = (
+                f'call "{activation_script}" && '
+                f'python -u "{training_script}" '
+                f'--train "{train_file}" --test "{test_file}" '
+                f'--features {features} --labels {classification} '
+                f'--size {gpu} --epoch {epoch} '
+                f'--output "{output_directory_training}"'
+            )
+            command = [
+                os.environ.get("COMSPEC", "cmd.exe"),
+                "/d",
+                "/s",
+                "/c",
+                command_text,
+            ]
+            completed, log_path = run_logged_command(
+                command,
+                self.output_directory,
+                "point_transformer_v1_execution.log",
+                "Point Transformer V1 training",
+                working_directory=directory_bat,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                details={
+                    "Selected feature indices": features,
+                    "Classification column": classification,
+                },
+            )
+            if completed.returncode != 0:
+                progress.stop()
+                messagebox.showerror(
+                    "Point Transformer V1 error",
+                    execution_failure_message(
+                        "Point Transformer V1 training failed.",
+                        log_path,
+                        completed.returncode,
+                    ),
+                    parent=root,
+                )
+                return
             progress.setMethodTitle("Postprocessing the point cloud...") 
             os.remove(os.path.join(self.output_directory, 'input_point_cloud.txt'))
             os.remove(os.path.join(self.output_directory, 'input_point_cloud_testing.txt'))
@@ -398,7 +443,6 @@ class GUI_dl(tk.Frame):
             additional_modules_directory=os.path.sep.join(self.output_directory)+ '\cloud_classified.txt'
             sys.path.insert(0, additional_modules_directory)
             output_directory_classification=os.path.join(self.output_directory, 'cloud_classified.txt')
-            output_log_file=os.path.join(self.output_directory, 'output.log')
             inference_script = os.path.join(current_directory,'point_transformer','inference.py')
             classification_file= os.path.join(self.output_directory, 'input_point_cloud_classification.txt')
             gpu=gpu_value
@@ -411,9 +455,48 @@ class GUI_dl(tk.Frame):
                 print("The file was not found or the path is incorrect.")
             features= content
             progress.setMethodTitle("Running the classifier...") 
-            os.chdir(directory_bat)
-            command = f'{directory_bat}/env/point_transformer_v1/Scripts/activate.bat && python -u "{inference_script}" --model "{path_pytorch}" --features {features} --input "{classification_file}" --size {gpu} --output "{output_directory_classification}" > "{output_log_file}"'
-            os.system(command)
+            activation_script = os.path.join(
+                directory_bat,
+                "env",
+                "point_transformer_v1",
+                "Scripts",
+                "activate.bat",
+            )
+            command_text = (
+                f'call "{activation_script}" && '
+                f'python -u "{inference_script}" '
+                f'--model "{path_pytorch}" --features {features} '
+                f'--input "{classification_file}" --size {gpu} '
+                f'--output "{output_directory_classification}"'
+            )
+            command = [
+                os.environ.get("COMSPEC", "cmd.exe"),
+                "/d",
+                "/s",
+                "/c",
+                command_text,
+            ]
+            completed, log_path = run_logged_command(
+                command,
+                self.output_directory,
+                "point_transformer_v1_execution.log",
+                "Point Transformer V1 prediction",
+                working_directory=directory_bat,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                details={"Selected feature indices": features},
+            )
+            if completed.returncode != 0:
+                progress.stop()
+                messagebox.showerror(
+                    "Point Transformer V1 error",
+                    execution_failure_message(
+                        "Point Transformer V1 prediction failed.",
+                        log_path,
+                        completed.returncode,
+                    ),
+                    parent=root,
+                )
+                return
             progress.setMethodTitle("Postprocessing the point cloud...") 
             # CREATE THE RESULTING POINT CLOUD 
             # Load the predictions

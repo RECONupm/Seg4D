@@ -32,6 +32,7 @@ sys.path.insert(0, additional_modules_directory)
 sys.path.insert(0, additional_modules_directory_2)
 from main import P2p_getdata,get_istance,get_point_clouds_name, check_input, write_yaml_file
 from main_gui import show_features_window, definition_of_labels_type_1,definition_of_entries_type_1, definition_of_combobox_type_1,definition_ok_cancel_buttons_type_1,definition_run_cancel_buttons_type_1, definition_of_buttons_type_1, definition_of_entries_type_1
+from execution_logging import execution_failure_message, run_logged_command
 
 
 #%% ADDING PATHS FROM THE CONFIGS FILES
@@ -196,6 +197,10 @@ class GUI_mlu(tk.Frame):
                 t2_entry_features_widget.insert(0, self.file_path_features)
         
         def show_set_up_window (self,algo):
+            def close_set_up_window():
+                if set_up_window.winfo_exists():
+                    set_up_window.destroy()
+
             def on_ok_button_click(algo):
                 if algo=="K-means":
                     save_setup_parameters(self,algo, int(entry_param1_km.get()), int(entry_param2_km.get()))  
@@ -224,14 +229,17 @@ class GUI_mlu(tk.Frame):
                     else:
                         self.optimization_strategy= (0,int(entry_max_clusters.get()),int(entry_min_clusters.get()))
                 
-                set_up_window.destroy()  # Close the window after saving parameters
+                close_set_up_window()  # Close the window after saving parameters
                 
             set_up_window = tk.Toplevel(root)
+            set_up_window.withdraw()
             set_up_window.title("Set Up the algorithm")
             set_up_window.resizable (False, False)
             
             # Remove minimize and maximize button 
             set_up_window.attributes ('-toolwindow',-1)
+            set_up_window.transient(root)
+            set_up_window.protocol("WM_DELETE_WINDOW", close_set_up_window)
             def toggle_row():
                 if var1.get() == 1:
                     label_max_clusters.config(state=tk.NORMAL)
@@ -302,7 +310,7 @@ class GUI_mlu(tk.Frame):
                 # Buttons
                 button_ok = tk.Button(set_up_window, text="OK", command=lambda: on_ok_button_click(algo))
                 button_ok.grid(row=6, column=1)
-                
+
             elif algo=="Fuzzy-K-means":
                 
                 # Labels            
@@ -352,7 +360,8 @@ class GUI_mlu(tk.Frame):
 
                 # Buttons
                 button_ok = tk.Button(set_up_window, text="OK", command=lambda: on_ok_button_click(algo))
-                button_ok.grid(row=6, column=1)      
+                button_ok.grid(row=6, column=1)
+
             elif algo=="Hierarchical-clustering":
                 label_param1_hc = tk.Label(set_up_window, text="Number of clusters:")
                 label_param1_hc.grid(row=0, column=0, sticky=tk.W)            
@@ -461,7 +470,25 @@ class GUI_mlu(tk.Frame):
                 entry_param6_optics.grid(row=5, column=1)
                 # Buttons
                 button_ok = tk.Button(set_up_window, text="OK", command=lambda: on_ok_button_click(algo))
-                button_ok.grid(row=6, column=1)                         
+                button_ok.grid(row=6, column=1)
+
+            # Show the completed dialog above its owner and make it modal.
+            set_up_window.update_idletasks()
+            set_up_window.deiconify()
+            set_up_window.wait_visibility()
+            set_up_window.lift(root)
+            set_up_window.grab_set()
+            set_up_window.focus_force()
+            root.wait_window(set_up_window)
+
+            # Restore the modal grab held by the parent tool window.
+            try:
+                if root.winfo_exists():
+                    root.grab_set()
+                    root.lift()
+                    root.focus_force()
+            except tk.TclError:
+                pass
        
         # GENERAL CONFIGURATION OF THE GUI
         
@@ -622,7 +649,13 @@ class GUI_mlu(tk.Frame):
                         }
                 }                          
                 write_yaml_file (self.output_directory,yaml)
-                command = path_kmeans + ' --i "' + os.path.join(self.output_directory,'algorithm_configuration.yaml') + '" --o "' + self.output_directory +'"'
+                command = [
+                    path_kmeans,
+                    "--input",
+                    os.path.join(self.output_directory, "algorithm_configuration.yaml"),
+                    "--output",
+                    self.output_directory,
+                ]
             
             elif algo=="Fuzzy-K-means":
                   
@@ -640,7 +673,13 @@ class GUI_mlu(tk.Frame):
                         }
                 }                          
                 write_yaml_file (self.output_directory,yaml)
-                command = path_fuzzykmeans + ' --i "' + os.path.join(self.output_directory,'algorithm_configuration.yaml') + '" --o "' + self.output_directory +'"'
+                command = [
+                    path_fuzzykmeans,
+                    "--input",
+                    os.path.join(self.output_directory, "algorithm_configuration.yaml"),
+                    "--output",
+                    self.output_directory,
+                ]
                 
             elif algo=="Hierarchical-clustering":
                   
@@ -661,7 +700,13 @@ class GUI_mlu(tk.Frame):
                         }
                 }                           
                 write_yaml_file (self.output_directory,yaml)
-                command = path_hierarchical_clustering + ' --i "' + os.path.join(self.output_directory,'algorithm_configuration.yaml') + '" --o "' + self.output_directory +'"'
+                command = [
+                    path_hierarchical_clustering,
+                    "--input",
+                    os.path.join(self.output_directory, "algorithm_configuration.yaml"),
+                    "--output",
+                    self.output_directory,
+                ]
                 
             elif algo=="DBSCAN":
                   
@@ -678,7 +723,13 @@ class GUI_mlu(tk.Frame):
                         }
                 }                          
                 write_yaml_file (self.output_directory,yaml)
-                command = path_dbscan + ' --i "' + os.path.join(self.output_directory,'algorithm_configuration.yaml') + '" --o "' + self.output_directory +'"'
+                command = [
+                    path_dbscan,
+                    "--input",
+                    os.path.join(self.output_directory, "algorithm_configuration.yaml"),
+                    "--output",
+                    self.output_directory,
+                ]
                 
             elif algo=="OPTICS":
                   
@@ -699,9 +750,40 @@ class GUI_mlu(tk.Frame):
                         }
                 }                    
                 write_yaml_file (self.output_directory,yaml)
-                command = path_optics + ' --i "' + os.path.join(self.output_directory,'algorithm_configuration.yaml') + '" --o "' + self.output_directory + '"'
+                command = [
+                    path_optics,
+                    "--input",
+                    os.path.join(self.output_directory, "algorithm_configuration.yaml"),
+                    "--output",
+                    self.output_directory,
+                ]
             # RUN THE COMMAND LINE
-            os.system(command)            
+            completed, log_path = run_logged_command(
+                command,
+                self.output_directory,
+                "unsupervised_execution.log",
+                f"Unsupervised segmentation - {algo}",
+                working_directory=os.path.dirname(command[0]),
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                details={
+                    "Algorithm": algo,
+                    "Selected features": ", ".join(self.features2include),
+                    "Input shape": pcd_training.shape,
+                    "Configuration": yaml,
+                },
+            )
+            if completed.returncode != 0:
+                progress.stop()
+                messagebox.showerror(
+                    "Unsupervised segmentation error",
+                    execution_failure_message(
+                        f"{algo} failed.",
+                        log_path,
+                        completed.returncode,
+                    ),
+                    parent=root,
+                )
+                return
 
             # CREATE THE RESULTING POINT CLOUD 
             # Load the predictions
@@ -741,8 +823,6 @@ class GUI_mlu(tk.Frame):
             
             # Save the point cloud
             pcd_prediction.to_csv(os.path.join(self.output_directory, 'input_point_cloud_prediction.txt'),sep=' ',header=True,index=False)
-            command= path_prediction
-
             # YAML file
             yaml = {
                 'INPUT_POINT_CLOUD': os.path.join(self.output_directory, 'input_point_cloud_prediction.txt'),  
@@ -757,8 +837,33 @@ class GUI_mlu(tk.Frame):
             write_yaml_file (self.output_directory,yaml)    
             
             # RUN THE COMMAND LINE
-            command = path_prediction + ' --i ' + os.path.join(self.output_directory,'algorithm_configuration.yaml') + ' --o ' + self.output_directory
-            os.system(command)
+            command = [
+                path_prediction,
+                "--input",
+                os.path.join(self.output_directory, "algorithm_configuration.yaml"),
+                "--output",
+                self.output_directory,
+            ]
+            completed, log_path = run_logged_command(
+                command,
+                self.output_directory,
+                "unsupervised_prediction_execution.log",
+                "Unsupervised model prediction",
+                working_directory=os.path.dirname(path_prediction),
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            if completed.returncode != 0:
+                progress.stop()
+                messagebox.showerror(
+                    "Unsupervised prediction error",
+                    execution_failure_message(
+                        "The unsupervised prediction failed.",
+                        log_path,
+                        completed.returncode,
+                    ),
+                    parent=root,
+                )
+                return
 
             
             # CREATE THE RESULTING POINT CLOUD 

@@ -1,0 +1,152 @@
+{
+  "targets": {
+    "jakteristics": {
+      "environment": "seg4d-jakteristics",
+      "pythonVersion": "3.8",
+      "requirements": "scripts/requirements/jakteristics.txt",
+      "entryScript": "conda_env/geometric_based_methods/jakteristics-0.6.0.py",
+      "executableName": "jakteristics-0.6.0",
+      "outputDirectory": "geometric-based_methods/jakteristics_runtime",
+      "smokeTestArguments": [
+        "--self-test"
+      ],
+      "requiredImports": [
+        "jakteristics",
+        "numpy",
+        "pandas",
+        "yaml"
+      ],
+      "collectAll": [
+        "jakteristics"
+      ]
+    },
+    "optimal-flow": {
+      "environment": "seg4d-optimal-flow",
+      "pythonVersion": "3.10",
+      "requirements": "scripts/requirements/optimal-flow.txt",
+      "entryScript": "conda_env/segmentation_methods/optimal_flow-0.1.11/optimal_flow.py",
+      "executableName": "optimal_flow",
+      "outputDirectory": "segmentation_methods/optimalflow_runtime",
+      "smokeTestArguments": [
+        "--self-test"
+      ],
+      "requiredImports": [
+        "IPython",
+        "optimalflow",
+        "pandas",
+        "yaml"
+      ],
+      "collectAll": [
+        "optimalflow"
+      ]
+    },
+    "machine-learning": {
+      "environment": "seg4d-machine-learning",
+      "pythonVersion": "3.10",
+      "requirements": "scripts/requirements/machine-learning.txt",
+      "entryScript": "conda_env/segmentation_methods/scikit-learn-1.3.2/scikit-learn-1.3.2.py",
+      "executableName": "scikit-learn-1.3.2",
+      "outputDirectory": "segmentation_methods/sklearn_runtime",
+      "smokeTestArguments": [
+        "--self-test"
+      ],
+      "requiredImports": [
+        "fcmeans",
+        "matplotlib",
+        "pandas",
+        "scipy",
+        "sklearn",
+        "tpot",
+        "xgboost",
+        "yaml",
+        "yellowbrick"
+      ],
+      "collectAll": [
+        "fcmeans",
+        "tpot",
+        "xgboost",
+        "yellowbrick"
+      ]
+    },
+    "tpot": {
+      "environment": "seg4d-tpot",
+      "pythonVersion": "3.11",
+      "requirements": "scripts/requirements/tpot.txt",
+      "entryScript": "conda_env/segmentation_methods/tpot-0.12.1/TPOT.py",
+      "executableName": "tpot",
+      "outputDirectory": "segmentation_methods/tpot_runtime",
+      "smokeTestArguments": [
+        "--self-test"
+      ],
+      "requiredImports": [
+        "joblib",
+        "matplotlib",
+        "pandas",
+        "sklearn",
+        "tpot",
+        "yaml",
+        "yellowbrick"
+      ],
+      "collectAll": [
+        "tpot",
+        "xgboost",
+        "yellowbrick"
+      ]
+    },
+    "point-transformer-v3": {
+      "environment": "pointcept",
+      "pythonVersion": "3.8",
+      "requirements": "scripts/requirements/point-transformer-v3-build.txt",
+      "runtimeRequirements": "scripts/requirements/point-transformer-v3-runtime.txt",
+      "buildToolsDirectory": ".build/build-tools/point-transformer-v3",
+      "entryScript": "segmentation_methods/point_transformer_v3/point_transformer_v3_cli.py",
+      "pythonPaths": [
+        "segmentation_methods"
+      ],
+      "reuseBuildCache": true,
+      "executableName": "point_transformer_v3",
+      "outputDirectory": "segmentation_methods/point_transformer_v3_runtime",
+      "smokeTestArguments": [
+        "--self-test"
+      ],
+      "requiredImports": [
+        "numpy",
+        "spconv",
+        "torch",
+        "torch_scatter"
+      ],
+      "collectAll": [
+        "cumm",
+        "ninja",
+        "spconv",
+        "torch_scatter"
+      ],
+      "excludeModules": [
+        "h5py",
+        "matplotlib",
+        "PIL",
+        "scipy",
+        "tkinter",
+        "torchaudio",
+        "torchvision"
+      ]
+    },
+    "anisotropic-denoising": {
+      "environment": "seg4d-anisotropic",
+      "pythonVersion": "3.9",
+      "requirements": "scripts/requirements/anisotropic-denoising.txt",
+      "entryScript": "conda_env/other/anisotropic_filter/Scripts/Anisotropic_denoising.py",
+      "executableName": "anisotropic_denoising-1.0.4",
+      "outputDirectory": "other_methods/anisotropic_denoising-1.0.4",
+      "requiredImports": [
+        "anisofilter",
+        "numpy",
+        "scipy",
+        "sklearn"
+      ],
+      "collectAll": [
+        "anisofilter"
+      ]
+    }
+  }
+}

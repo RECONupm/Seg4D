@@ -48,7 +48,10 @@ def P2p_getdata (pc,nan_value=False,sc=True,color=True):
     -------
     pcd : Pandas frame of the point cloud
     """
-    pcd = pd.DataFrame(pc.points(), columns=['X', 'Y', 'Z'])
+    points = np.asarray(pc.points(), dtype=np.float64)
+    if points.ndim != 2 or points.shape[1] < 3:
+        raise ValueError("The point cloud has an invalid coordinate table")
+    pcd = pd.DataFrame(points[:, :3].copy(), columns=['X', 'Y', 'Z'])
     if color==True:
         ## GET THE RGB COLORS
         # pcd['R']=pc.colors()[:,0]
@@ -59,8 +62,16 @@ def P2p_getdata (pc,nan_value=False,sc=True,color=True):
     ## ADD SCALAR FIELD TO THE DATAFRAME
         for i in range(pc.getNumberOfScalarFields()):
             scalarFieldName = pc.getScalarFieldName(i)  
-            scalarField = pc.getScalarField(i).asArray()[:]              
-            pcd.insert(len(pcd.columns), scalarFieldName, scalarField) 
+            scalarField = np.asarray(
+                pc.getScalarField(i).asArray(),
+                dtype=np.float64,
+            ).reshape(-1).copy()
+            if scalarField.size != len(pcd):
+                raise ValueError(
+                    f"The scalar field '{scalarFieldName}' does not match "
+                    "the point-cloud size"
+                )
+            pcd.insert(len(pcd.columns), scalarFieldName, scalarField)
             pcd=pcd.copy()
     ## DELETE NAN VALUES
     if (nan_value==True):

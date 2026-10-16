@@ -1,0 +1,77 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Seg4D: bootstrap and build all runtimes",
+            "type": "process",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build-executables.ps1", "-Bootstrap"],
+            "options": {"cwd": "${workspaceFolder}"},
+            "problemMatcher": []
+        },
+        {
+            "label": "Seg4D: bootstrap and build CPU runtimes",
+            "type": "process",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build-executables.ps1", "-Target", "jakteristics,optimal-flow,machine-learning,tpot,anisotropic-denoising", "-Bootstrap"],
+            "options": {"cwd": "${workspaceFolder}"},
+            "problemMatcher": []
+        },
+        {
+            "label": "Seg4D: bootstrap and build selected runtime",
+            "type": "process",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build-executables.ps1", "-Target", "${input:seg4dTarget}", "-Bootstrap"],
+            "options": {"cwd": "${workspaceFolder}"},
+            "problemMatcher": []
+        },
+        {
+            "label": "Seg4D: rebuild selected runtime",
+            "type": "process",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build-executables.ps1", "-Target", "${input:seg4dTarget}"],
+            "options": {"cwd": "${workspaceFolder}"},
+            "problemMatcher": []
+        },
+        {
+            "label": "Seg4D: package installer (reuse runtimes)",
+            "type": "process",
+            "command": "${command:python.interpreterPath}",
+            "args": ["${workspaceFolder}/create_installer.py"],
+            "options": {"cwd": "${workspaceFolder}"},
+            "group": {"kind": "build", "isDefault": true},
+            "problemMatcher": []
+        },
+        {
+            "label": "Seg4D: check CloudCompare runtime",
+            "type": "process",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/check-cloudcompare-runtime.ps1", "-CloudCompareDirectory", "${input:cloudCompareDirectory}"],
+            "options": {"cwd": "${workspaceFolder}"},
+            "problemMatcher": []
+        },
+        {
+            "label": "Seg4D: run tests in machine-learning environment",
+            "type": "process",
+            "command": "conda",
+            "args": ["run", "--no-capture-output", "--name", "seg4d-machine-learning", "python", "-B", "-m", "unittest", "discover", "-s", "tests", "-v"],
+            "options": {"cwd": "${workspaceFolder}"},
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "seg4dTarget",
+            "type": "pickString",
+            "description": "Processing runtime to build (PTv3 requires a prepared pointcept environment)",
+            "options": ["machine-learning", "tpot", "optimal-flow", "jakteristics", "point-transformer-v3", "anisotropic-denoising"],
+            "default": "machine-learning"
+        },
+        {
+            "id": "cloudCompareDirectory",
+            "type": "promptString",
+            "description": "CloudCompare installation directory",
+            "default": "C:\\Program Files\\CloudCompare"
+        }
+    ]
+}

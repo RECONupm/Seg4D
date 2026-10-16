@@ -1,9 +1,35 @@
 
 /point_clouds_examples
-segmentation_methods/tpot-0.12.1/TPOT.exe
-segmentation_methods/tpot-0.12.1/_internal/tzdata/zoneinfo/Pacific/Enderbury
-/segmentation_methods/tpot-0.12.1
-/segmentation_methods/scikit-learn-1.3.2
+/.build/
+/installer/*.exe
+/installer/*.zip
+/installer/*.7z
+/installer/*.msi
+# Downloaded packages and local environments are rebuilt/restored, not source.
+/downloads/
+/.venv/
+/venv/
+*.part
+*.download
+__pycache__/
+*.py[cod]
+
+# Generated standalone executable bundles. These are recreated with
+# scripts/build-executables.ps1 and must never be committed to GitHub.
+/segmentation_methods/*_runtime/
+/geometric-based_methods/*_runtime/
+/other_methods/*_runtime/
+
+# Legacy runtime output name retained for compatibility.
+/other_methods/anisotropic_denoising-1.0.4/
+
 /segmentation_methods/point_transformer/env
-/segmentation_methods/optimal_flow-0.1.11
 segmentation_methods/point_transformer.7z
+
+# Historical frozen bundles (retain adjacent source scripts).
+/geometric-based_methods/jakteristics-0.6.0/
+/segmentation_methods/optimal_flow-0.1.11/
+/segmentation_methods/scikit-learn-1.3.2/
+/segmentation_methods/tpot-0.12.1/
+/segmentation_methods/point_transformer/_internal/
+/segmentation_methods/point_transformer/*.exe

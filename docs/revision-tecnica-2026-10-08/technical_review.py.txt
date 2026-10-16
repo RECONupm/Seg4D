@@ -1,0 +1,73 @@
+"""Read-only source audit; writes only review artifacts and temporary PLY files."""
+import ast
+import csv
+import hashlib
+import importlib.metadata
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import time
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / 'docs' / 'revision-tecnica-2026-10-08'
+OUT.mkdir(parents=True, exist_ok=True)
+paths = sorted(Path(p) for p in subprocess.check_output(['rg', '--files', '-g', '*.py'], cwd=ROOT, text=True).splitlines())
+inventory = []
+for relative in paths:
+    source = (ROOT / relative).read_text(encoding='utf-8-sig')
+    tree = ast.parse(source, filename=str(relative))
+    compile(tree, str(relative), 'exec')
+    functions = [n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+    inventory.append({'file': relative.as_posix(), 'lines': len(source.splitlines()), 'bytes': (ROOT / relative).stat().st_size, 'sha256': hashlib.sha256((ROOT / relative).read_bytes()).hexdigest(), 'functions': len(functions), 'largest_function_lines': max((n.end_lineno - n.lineno + 1 for n in functions), default=0), 'syntax': 'OK'})
+with (OUT / 'inventario.csv').open('w', encoding='utf-8-sig', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=inventory[0].keys()); writer.writeheader(); writer.writerows(inventory)
+sys.path.insert(0, str(ROOT / 'main_module'))
+import numpy as np
+import pandas as pd
+from scipy.spatial import ConvexHull
+from scipy.stats import linregress
+from geometry_compat import write_voxel_mesh_ply
+from point_cloud_processing import compute_custom_features
+from supervoxel_processing import compute_supervoxels
+from ransac import RANSAC
+
+results = {'python': sys.version, 'versions': {p: importlib.metadata.version(p) for p in ['numpy','pandas','scipy','scikit-learn']}, 'python_scripts': len(inventory), 'lines': sum(x['lines'] for x in inventory), 'syntax_errors': 0, 'checks': [], 'benchmarks': []}
+def check(name, action):
+    try:
+        result = action()
+        results['checks'].append({'name': name, 'result': str(result)})
+    except Exception as e:
+        results['checks'].append({'name': name, 'exception': type(e).__name__, 'message': str(e)})
+
+def extract(path, names, namespace):
+    tree = ast.parse((ROOT / path).read_text(encoding='utf-8-sig'))
+    nodes = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name in names]
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), str(path), 'exec'), namespace)
+    return namespace
+
+check('voxelization_Nx4', lambda: write_voxel_mesh_ply(OUT / 'should_not_exist.ply', np.array([[0,0,0,1],[1,0,0,2.]]), .1))
+check('hull_unit_square', lambda: {'area_attribute': ConvexHull([[0,0],[1,0],[1,1],[0,1]]).area, 'volume_attribute': ConvexHull([[0,0],[1,0],[1,1],[0,1]]).volume})
+check('vertical_centroids_linregress', lambda: linregress(np.zeros(4), np.arange(4)))
+check('ransac_collinear_three_points', lambda: RANSAC(np.array([0.,1.,2.]), np.array([0.,0.,0.]), 1, 0, .1, 'Circular arch').execute_ransac())
+check('ransac_no_accepted_model', lambda: RANSAC(np.array([0.,1.,0.]), np.array([0.,0.,1.]), 1, 3, .1, 'Circular arch').execute_ransac())
+namespace = extract('main_module/main.py', ['minBoundingRect'], {'np': np, 'math': __import__('math')})
+check('bounding_rect_large_square', lambda: namespace['minBoundingRect'](np.array([[0.,0.],[400.,0.],[400.,400.],[0.,400.],[0.,0.]]))[:4])
+check('texture_actual_expression', lambda: {'computed_mean': float((np.array([[2.],[4.]]) + np.array([10.])).mean()), 'expected_neighborhood_mean': 16/3})
+check('plot_feature_first_character', lambda: pd.DataFrame({'linearity':[1,2],'planarity':[2,3]})['linearity'[0]])
+check('unrelated_nan_removes_valid_point', lambda: pd.DataFrame({'X':[0.], 'Y':[0.], 'Z':[0.], 'used':[1.], 'unused':[np.nan]}).dropna().shape)
+ns = extract('geometric-based_methods/analysis_of_arches.py', ['arch_estimation'], {'np':np, 'RANSAC':RANSAC, 'extract_points_within_tolerance':lambda points, *args: (points, points)})
+check('arch_fixed_circular_midpoint', lambda: ns['arch_estimation'](0,pd.DataFrame({'X':np.arange(10.),'Y':np.zeros(10),'Z':np.arange(10.)}), 'Circular arch', .1, 1, .1, 3, True, 100, False, str(OUT)))
+
+rng = np.random.default_rng(20261008)
+for n in (300, 1000):
+    points = rng.random((n,3))
+    for feature in (['Direction','Relative Elevation'], ['Point Feature Histogram']):
+        started = time.perf_counter(); data = compute_custom_features(points,[.15],feature)
+        results['benchmarks'].append({'n':n,'features':feature,'radius':.15,'seconds':time.perf_counter()-started,'output_bytes':sum(v.nbytes for v in data.values())})
+    started=time.perf_counter(); sv=compute_supervoxels(points, voxel_resolution=.08, seed_resolution=.3, normal_radius=.15, iterations=2)
+    results['benchmarks'].append({'n':n,'operation':'supervoxels','seconds':time.perf_counter()-started,'supervoxels':len(sv.centroids)})
+(OUT / 'comprobaciones.json').write_text(json.dumps(results,indent=2),encoding='utf-8')
+print(json.dumps(results,indent=2))
+print('Largest functions:', sorted(inventory,key=lambda x:x['largest_function_lines'],reverse=True)[:5])

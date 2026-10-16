@@ -20,7 +20,9 @@ from tkinter import filedialog
 script_directory = os.path.abspath(__file__)
 path_parts = script_directory.split(os.path.sep)
 
-additional_modules_directory=os.path.sep.join(path_parts[:-2])+ '\main_module'
+additional_modules_directory = os.path.join(
+    os.path.sep.join(path_parts[:-2]), "main_module"
+)
 
 sys.path.insert(0, additional_modules_directory)
 from main import P2p_getdata,get_istance,get_point_clouds_name
@@ -45,7 +47,9 @@ def show_features_window(self,name_list,training_pc_name="Not selected",excluded
     
     preselected_features (list): list of the preselected features. To load it while starting the window
     
-    excluded_feature (str): name of the feeature that need to be excluded from the selection. Default: "Classification"
+    excluded_feature (str or iterable): name or names of the features that need
+                                       to be excluded from the selection.
+                                       Default: "Classification"
     
     single_aselection_mode (bool): true if the window just only allow to select one feature. False the other side.
    
@@ -134,10 +138,17 @@ def show_features_window(self,name_list,training_pc_name="Not selected",excluded
     pcd_training = P2p_getdata(pc_training, False, True, True)
     
     #GUI
-    feature_window = tk.Toplevel()
+    parent_window = self.winfo_toplevel()
+    feature_window = tk.Toplevel(parent_window)
     feature_window.title("Features of the point cloud")
     feature_window.iconbitmap(path_icon_ico)
-    feature_window.resizable (False, False) 
+    feature_window.resizable (False, False)
+    feature_window.transient(parent_window)
+    feature_window.attributes("-topmost", True)
+    feature_window.update_idletasks()
+    feature_window.lift()
+    feature_window.grab_set()
+    feature_window.focus_force()
     
     # Set up the protocol for the window close button (the "X" button)
     feature_window.protocol("WM_DELETE_WINDOW", ok_features_window)
@@ -175,7 +186,13 @@ def show_features_window(self,name_list,training_pc_name="Not selected",excluded
         _=definition_of_buttons_type_2("features_windows", button_text, command_list, button_frame) 
     
     # Render the features within the check button and set initial selection
-    values_list = [col for col in pcd_training.columns if col != excluded_feature]
+    if isinstance(excluded_feature, str):
+        excluded_features = {excluded_feature}
+    else:
+        excluded_features = set(excluded_feature)
+    values_list = [
+        col for col in pcd_training.columns if col not in excluded_features
+    ]
     checkbuttons_vars = []
     for value in values_list:
         var = tk.BooleanVar(value=value in self.features2include)

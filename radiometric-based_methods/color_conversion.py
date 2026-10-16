@@ -6,11 +6,10 @@ Created on Mon May 15 23:00:29 2023
 """
 
 import tkinter as tk
-from tkinter import ttk
-import pandas as pd
+from tkinter import ttk, messagebox
 import cccorelib
 import pycc
-import colorsys
+import numpy as np
 import os
 import sys
 import traceback
@@ -18,16 +17,15 @@ import traceback
 #%% ADDING THE MAIN MODULE FOR ADDITIONAL FUNCTIONS
 
 script_directory = os.path.abspath(__file__)
-path_parts = script_directory.split(os.path.sep)
-additional_modules_directory=os.path.sep.join(path_parts[:-2])+ '\main_module'
+additional_modules_directory = os.path.join(
+    os.path.dirname(os.path.dirname(script_directory)),
+    'main_module'
+)
 sys.path.insert(0, additional_modules_directory)
-from main import P2p_getdata,get_istance,get_point_clouds_name, check_input
+from main import get_point_clouds_name, check_input
 from main_gui import show_features_window, definition_of_labels_type_1,definition_of_entries_type_1, definition_of_combobox_type_1,definition_ok_cancel_buttons_type_1,definition_run_cancel_buttons_type_1, definition_of_buttons_type_1
 
 CC = pycc.GetInstance()
-
-#%% INITIAL OPERATIONS
-name_list=get_point_clouds_name()
 
 #%% GUI
 
@@ -36,96 +34,145 @@ class GUI_cc(tk.Frame):
         super().__init__(master, **kwargs)      
         self.output_directory=os.getcwd() # Directory to save the files (output)
     
-    # Convert RGB to HSV function
-    def rgb_to_hsv(self,row):
-        try:
-            r, g, b = row['R'], row['G'], row['B']
-        except KeyError:
-            raise KeyError("One or more of the layers ('R', 'G', 'B') are not in the scaler field of the point cloud")
-        h, s, v = colorsys.rgb_to_hsv(r, g, b)
-        return pd.Series([h, s, v])
-    
-    # Convert RGB to YCBCR function
-    def rgb_to_ycbcr(self,row):
-        try:
-            r, g, b = row['R'], row['G'], row['B']
-        except KeyError:
-            raise KeyError("One or more of the layers ('R', 'G', 'B') are not in the scaler field of the point cloud")
-        y = 0.299 * r + 0.587 * g + 0.114 * b
-        cb = 0.564 * (b - y)
-        cr = 0.713 * (r - y)
-        return pd.Series([y, cb, cr])
-    
-    # Convert RGB to YIQ function
-    def rgb_to_yiq(self,row):
-        try:
-            r, g, b = row['R'], row['G'], row['B']
-        except KeyError:
-            raise KeyError("One or more of the layers ('R', 'G', 'B') are not in the scaler field of the point cloud")
-        y = 0.299 * r + 0.587 * g + 0.114 * b
-        i = 0.596 * r - 0.274 * g - 0.322 * b
-        q = 0.211 * r - 0.523 * g + 0.312 * b
-        return pd.Series([y, i, q])
-    
-    # Convert RGB to YUV function
-    def rgb_to_yuv(self,row):
-        try:
-            r, g, b = row['R'], row['G'], row['B']
-        except KeyError:
-            raise KeyError("One or more of the layers ('R', 'G', 'B') are not in the scaler field of the point cloud")
-        y = 0.299 * r + 0.587 * g + 0.114 * b
-        u = -0.147 * r - 0.289 * g + 0.436 * b
-        v = 0.615 * r - 0.515 * g - 0.100 * b
-        return pd.Series([y, u, v])
-    
-    # Create Scalar fields for the different color functions
-    def color_conversion (self,selected_algorithms,pc,pcd):
-         for algorithm in selected_algorithms:
-             print(f"Coverting to: {algorithm}")
-             if algorithm == 'HSV':
-                 
-                 pcd[['H(HSV)', 'S(HSV)', 'V(HSV)']] = pcd.apply(self.rgb_to_hsv, axis=1) # Add data to the dataframe
-                 pc.addScalarField("H(HSV)", pcd['H(HSV)'])                 
-                 pc.addScalarField("S(HSV)", pcd['S(HSV)'])
-                 pc.addScalarField("V(HSV)", pcd['V(HSV)'])
-                 
-                 # To visualize properly the Scalar field
-                 pc.getScalarField(pc.getScalarFieldIndexByName("H(HSV)")).computeMinAndMax()
-                 pc.getScalarField(pc.getScalarFieldIndexByName("S(HSV)")).computeMinAndMax()
-                 pc.getScalarField(pc.getScalarFieldIndexByName("V(HSV)")).computeMinAndMax()
-             elif algorithm == 'YCbCr':            
-                 ## ADD YCBCR TO THE DATAFRAME
-                 pcd[['Y(YCbCr)', 'Cb(YCbCr)', 'Cr(YCbCr)']] = pcd.apply(self.rgb_to_ycbcr, axis=1) # Add data to the dataframe
-                 pc.addScalarField("Y(YCbCr)", pcd['Y(YCbCr)'])
-                 pc.addScalarField("Cb(YCbCr)", pcd['Cb(YCbCr)'])
-                 pc.addScalarField("Cr(YCbCr)", pcd['Cr(YCbCr)']) 
-                 
-                 # To visualize properly the Scalar field
-                 pc.getScalarField(pc.getScalarFieldIndexByName("Y(YCbCr)")).computeMinAndMax()
-                 pc.getScalarField(pc.getScalarFieldIndexByName("Cb(YCbCr)")).computeMinAndMax()
-                 pc.getScalarField(pc.getScalarFieldIndexByName("Cr(YCbCr)")).computeMinAndMax()
-             elif algorithm == 'YIQ': 
-                 pcd[['Y(YIQ)', 'I(YIQ)', 'Q(YIQ)']] = pcd.apply(self.rgb_to_yiq, axis=1) # Add data to the dataframe
-                 pc.addScalarField("Y(YIQ)", pcd['Y(YIQ)'])
-                 pc.addScalarField("I(YIQ)", pcd['I(YIQ)'])
-                 pc.addScalarField("Q(YIQ)", pcd['Q(YIQ)'])
-                 
-                 # To visualize properly the Scalar field
-                 pc.getScalarField(pc.getScalarFieldIndexByName("Y(YIQ)")).computeMinAndMax()
-                 pc.getScalarField(pc.getScalarFieldIndexByName("I(YIQ)")).computeMinAndMax()
-                 pc.getScalarField(pc.getScalarFieldIndexByName("Q(YIQ)")).computeMinAndMax()
-             elif algorithm == 'YUV': 
-                 pcd[['Y(YUV)', 'U(YUV)', 'V(YUV)']] = pcd.apply(self.rgb_to_yuv, axis=1) # Add data to the dataframe
-                 pc.addScalarField("Y(YUV)", pcd['Y(YUV)'])
-                 pc.addScalarField("U(YUV)", pcd['U(YUV)'])
-                 pc.addScalarField("V(YUV)", pcd['V(YUV)']) 
-                 
-                 # To visualize properly the Scalar field
-                 pc.getScalarField(pc.getScalarFieldIndexByName("Y(YUV)")).computeMinAndMax()
-                 pc.getScalarField(pc.getScalarFieldIndexByName("U(YUV)")).computeMinAndMax()
-                 pc.getScalarField(pc.getScalarFieldIndexByName("V(YUV)")).computeMinAndMax()
+    def get_rgb(self, pc):
+        """Return RGB values as an N x 3 float array.
+
+        Native CloudCompare colors are preferred. Scalar fields named R, G and
+        B are retained as a fallback for older workflows.
+        """
+        colors = pc.colors()
+        if colors is not None:
+            rgb = np.asarray(colors, dtype=np.float32)
+            if rgb.ndim != 2 or rgb.shape[0] != pc.size() or rgb.shape[1] < 3:
+                raise ValueError("The native color table has an invalid shape")
+            return rgb[:, :3].copy()
+
+        channels = []
+        for name in ("R", "G", "B"):
+            index = pc.getScalarFieldIndexByName(name)
+            if index < 0:
+                raise ValueError(
+                    "The selected point cloud has neither native RGB colors "
+                    "nor scalar fields named R, G and B"
+                )
+            channel = np.asarray(
+                pc.getScalarField(index).asArray(),
+                dtype=np.float32
+            ).reshape(-1)
+            channels.append(channel.copy())
+
+        rgb = np.column_stack(channels)
+        if rgb.shape[0] != pc.size():
+            raise ValueError("The RGB scalar fields do not match the point-cloud size")
+        return rgb
+
+    def rgb_to_hsv(self, rgb):
+        """Vectorized RGB-to-HSV conversion.
+
+        Hue and saturation are returned in [0, 1]. Value retains the same
+        numeric scale as the input RGB values.
+        """
+        maximum = np.max(rgb, axis=1)
+        minimum = np.min(rgb, axis=1)
+        delta = maximum - minimum
+
+        value = maximum
+        saturation = np.zeros_like(maximum)
+        nonzero_value = maximum != 0
+        saturation[nonzero_value] = delta[nonzero_value] / maximum[nonzero_value]
+
+        hue = np.zeros_like(maximum)
+        chromatic = delta != 0
+
+        red = chromatic & (maximum == rgb[:, 0])
+        green = chromatic & (maximum == rgb[:, 1])
+        blue = chromatic & (maximum == rgb[:, 2])
+
+        hue[red] = ((rgb[red, 1] - rgb[red, 2]) / delta[red]) % 6.0
+        hue[green] = (rgb[green, 2] - rgb[green, 0]) / delta[green] + 2.0
+        hue[blue] = (rgb[blue, 0] - rgb[blue, 1]) / delta[blue] + 4.0
+        hue /= 6.0
+
+        return hue, saturation, value
+
+    def add_or_replace_scalar_field(self, pc, name, values):
+        """Create a scalar field using the API supported by PythonRuntime."""
+        values = np.asarray(values, dtype=np.float32).reshape(-1)
+        if values.size != pc.size():
+            raise ValueError(f"Scalar field '{name}' does not match the cloud size")
+        if not np.all(np.isfinite(values)):
+            raise ValueError(f"Scalar field '{name}' contains non-finite values")
+
+        existing_index = pc.getScalarFieldIndexByName(name)
+        if existing_index >= 0:
+            pc.deleteScalarField(existing_index)
+
+        index = pc.addScalarField(name)
+        if index < 0:
+            raise RuntimeError(f"CloudCompare could not create scalar field '{name}'")
+
+        scalar_field = pc.getScalarField(index)
+        scalar_field.asArray()[:] = values
+        scalar_field.computeMinAndMax()
+        return index
+
+    # Create scalar fields for the selected color conversions
+    def color_conversion(self, selected_algorithms, pc, rgb, progress):
+        r = rgb[:, 0]
+        g = rgb[:, 1]
+        b = rgb[:, 2]
+        last_index = -1
+        total_steps = len(selected_algorithms) * 4
+        completed_steps = 0
+
+        def advance(info):
+            nonlocal completed_steps
+            completed_steps += 1
+            progress.setInfo(info)
+            progress.update(15.0 + 80.0 * completed_steps / total_steps)
+
+        for algorithm in selected_algorithms:
+            print(f"Converting to: {algorithm}")
+            progress.setInfo(f"Calculating {algorithm} values...")
+
+            if algorithm == 'HSV':
+                converted = self.rgb_to_hsv(rgb)
+                names = ("H(HSV)", "S(HSV)", "V(HSV)")
+            elif algorithm == 'YCbCr':
+                y = 0.299 * r + 0.587 * g + 0.114 * b
+                converted = (y, 0.564 * (b - y), 0.713 * (r - y))
+                names = ("Y(YCbCr)", "Cb(YCbCr)", "Cr(YCbCr)")
+            elif algorithm == 'YIQ':
+                converted = (
+                    0.299 * r + 0.587 * g + 0.114 * b,
+                    0.596 * r - 0.274 * g - 0.322 * b,
+                    0.211 * r - 0.523 * g + 0.312 * b
+                )
+                names = ("Y(YIQ)", "I(YIQ)", "Q(YIQ)")
+            elif algorithm == 'YUV':
+                converted = (
+                    0.299 * r + 0.587 * g + 0.114 * b,
+                    -0.147 * r - 0.289 * g + 0.436 * b,
+                    0.615 * r - 0.515 * g - 0.100 * b
+                )
+                names = ("Y(YUV)", "U(YUV)", "V(YUV)")
+            else:
+                continue
+
+            advance(f"{algorithm} values calculated")
+            for name, values in zip(names, converted):
+                progress.setInfo(f"Creating scalar field {name}...")
+                last_index = self.add_or_replace_scalar_field(pc, name, values)
+                advance(f"Scalar field {name} created")
+
+        if last_index >= 0:
+            pc.setCurrentDisplayedScalarField(last_index)
+            pc.showSF(True)
     
     def main_frame (self,window):
+        name_list = get_point_clouds_name()
+        if isinstance(name_list, str):
+            name_list = [name_list]
         
         def destroy(self):
             window.destroy()  # Close the window
@@ -154,9 +201,10 @@ class GUI_cc(tk.Frame):
         definition_of_labels_type_1 ("form_frame",label_texts,row_positions,form_frame,0)
         
         # Combobox
-        combo_point_cloud=ttk.Combobox (form_frame,values=name_list)
+        combo_point_cloud=ttk.Combobox (form_frame,values=name_list,state="readonly")
         combo_point_cloud.grid(column=1, row=0, sticky="e", pady=2)
-        combo_point_cloud.set("Not selected")
+        if name_list:
+            combo_point_cloud.current(0)
     
         # Checkboxes
         algorithm1_checkbox = tk.Checkbutton(form_frame, variable=algorithm1_var)
@@ -180,35 +228,47 @@ class GUI_cc(tk.Frame):
                                      )
             
         def run_algorithm_1(self,name_list,pc_name,hsv,ycbcr,yiq,yuv):
-            
-            # Start the progress bar
             progress = pycc.ccProgressDialog()
             progress.start()
             progress.setMethodTitle("Generating the new color scales...")
-            
-                            
-            selected_algorithms = []          
-            if hsv:
-                selected_algorithms.append("HSV")            
-            if ycbcr:
-                selected_algorithms.append("YCbCr")            
-            if yiq:
-                selected_algorithms.append("YIQ")                
-            if yuv:
-                selected_algorithms.append("YUV") 
-                
-            # Check if the selection is a point cloud
-            pc=check_input(name_list,pc_name)                
-            # Convert to a pandasdataframe
-            pcd=P2p_getdata(pc,False,True,True)    
-            self.color_conversion(selected_algorithms,pc,pcd)
-            CC.addToDB(pc)
-            CC.updateUI() 
-               
-            # Stop the progress bar
-            progress.stop()   
-            print('The color scales has been added to the scalar fields of the point cloud')  
-            self.destroy()  # Close the window
+            progress.setInfo("Validating the selection...")
+            progress.update(0)
+            try:
+                selected_algorithms = []
+                if hsv:
+                    selected_algorithms.append("HSV")
+                if ycbcr:
+                    selected_algorithms.append("YCbCr")
+                if yiq:
+                    selected_algorithms.append("YIQ")
+                if yuv:
+                    selected_algorithms.append("YUV")
+                if not selected_algorithms:
+                    raise ValueError("Select at least one color conversion")
+
+                progress.update(5)
+                progress.setInfo("Reading the selected point cloud...")
+                pc = check_input(name_list,pc_name)
+                progress.update(10)
+                progress.setInfo("Reading RGB colors...")
+                rgb = self.get_rgb(pc)
+                progress.update(15)
+                self.color_conversion(selected_algorithms,pc,rgb,progress)
+                progress.setInfo("Updating CloudCompare...")
+                CC.updateUI()
+                progress.update(100)
+
+                print('The color scales have been added to the point cloud')
+                window.destroy()
+            except Exception as error:
+                traceback.print_exc()
+                messagebox.showerror(
+                    "Color conversion",
+                    str(error),
+                    parent=window
+                )
+            finally:
+                progress.stop()
 
     def show_frame(self,window):
         self.main_frame(window)

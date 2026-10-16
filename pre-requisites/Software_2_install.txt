@@ -1,2 +1,15 @@
-CloudCompare 2.13.1 Kharkiv with the option Python runtime checked
+Current source-tree target: Windows x64, CloudCompare 2.14 with PythonRuntime
+embedding 64-bit CPython 3.13. Verify the embedded Python ABI before installing.
+CloudCompare 2.14 is listed as beta on the official download page as of 2026-10-16.
 
+Installer users: read INSTALLATION.md in the repository root.
+Developers/builders: read BUILDING.md and docs/vscode.md in the repository root.
+The separate pointcept CUDA environment is documented in docs/point-transformer-v3-build.md.
+It is created and populated automatically by --build-executables --bootstrap.
+Optional PTv1 is downloaded automatically with --include-legacy-point-transformer;
+install 7-Zip on the build machine first. See docs/external-payloads.md.
+
+Host dependency pins: pre-requisites/cloudcompare-python313.txt.
+Standalone build pins: scripts/requirements, selected by scripts/executable-builds.json.
+These environments are separate; do not install every historical Conda export
+into CloudCompare or a single development Python.

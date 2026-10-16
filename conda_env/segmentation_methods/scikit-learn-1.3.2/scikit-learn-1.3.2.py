@@ -25,6 +25,7 @@ import joblib
 import argparse
 
 import os
+import sys
 import yaml
 
 
@@ -44,24 +45,106 @@ from scipy.cluster.hierarchy import dendrogram
 import numpy as np
 import itertools
 import traceback
+import io
 from sklearn.metrics import calinski_harabasz_score
 from sklearn.metrics import davies_bouldin_score
 from yellowbrick.style import set_palette
 
-def main():
-    
-    #%% CMD
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--i',type=str,help='Yaml configuration file')
-    parser.add_argument('--o',type=str,help='Output_directory')    
-    args=parser.parse_args() 
+
+def parse_boolean(value, parameter_name):
+    """Convert YAML booleans and their string representation consistently."""
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "1", "yes", "on"}:
+        return True
+    if normalized in {"false", "0", "no", "off"}:
+        return False
+    raise ValueError(
+        f"{parameter_name} must be True or False, received: {value!r}"
+    )
+
+
+def run_self_test():
+    # AutoML models are predicted by this runtime too. Pickle resolves their
+    # operators dynamically, so a basic sklearn import/fit cannot verify that
+    # TPOT classes and XGBoost's native library made it into the frozen bundle.
+    from sklearn.pipeline import make_pipeline
+    from tpot.builtins import StackingEstimator
+    from xgboost import XGBClassifier
+
+    features = np.asarray(
+        [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
+    )
+    labels = np.asarray([0, 0, 1, 1])
+    classifier = RandomForestClassifier(n_estimators=2, random_state=42)
+    classifier.fit(features, labels)
+    if classifier.predict(features).shape != (4,):
+        raise RuntimeError("Scikit-learn classifier self-test failed.")
+    clustering = KMeans(n_clusters=2, n_init=1, random_state=42)
+    if clustering.fit_predict(features).shape != (4,):
+        raise RuntimeError("Scikit-learn clustering self-test failed.")
+    automl_classifier = make_pipeline(
+        StackingEstimator(
+            estimator=RandomForestClassifier(n_estimators=2, random_state=42)
+        ),
+        XGBClassifier(n_estimators=2, max_depth=1, n_jobs=1, random_state=42),
+    )
+    automl_classifier.fit(features, labels)
+    expected = automl_classifier.predict(features)
+    with io.BytesIO() as model_file:
+        joblib.dump(automl_classifier, model_file)
+        model_file.seek(0)
+        restored = joblib.load(model_file)
+        if not np.array_equal(restored.predict(features), expected):
+            raise RuntimeError("AutoML model prediction round-trip failed.")
+    print(f"Seg4D scikit-learn runtime self-test passed ({sklearn.__version__}).")
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog="seg4d_sklearn",
+        description=(
+            "Seg4D supervised, unsupervised and prediction console runtime."
+        ),
+    )
+    parser.add_argument("-i", "--input", dest="i", help="YAML configuration file.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="o",
+        help="Output directory (overrides the YAML value).",
+    )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="Validate the frozen scikit-learn runtime and exit.",
+    )
+    return parser
+
+
+def main(arguments=None):
+    parser = build_parser()
+    command_line = list(sys.argv[1:] if arguments is None else arguments)
+    if not command_line:
+        parser.print_help()
+        return 0
+    args = parser.parse_args(command_line)
+    if args.self_test:
+        run_self_test()
+        return 0
+    if not args.i:
+        parser.error("--input/--i is required unless --self-test is used.")
 
     
     #%% INITIAL READING
     with open(args.i, 'r') as yaml_file:
         config_data = yaml.full_load(yaml_file)
     algo =  config_data.get('ALGORITHM')
-    output_directory= config_data.get('OUTPUT_DIRECTORY')
+    output_directory = os.path.abspath(
+        args.o or config_data.get('OUTPUT_DIRECTORY')
+    )
+    os.makedirs(output_directory, exist_ok=True)
     if algo=="Prediction":
         
         input_file= config_data.get('INPUT_POINT_CLOUD')
@@ -231,12 +314,8 @@ def main():
             min_samples_split=float(min_samples_split)
         if max_depth==0:
             max_depth=None
-        if not bootstrap=="True":
-            bootstrap=True
-            oob_score = True
-        else:
-            bootstrap=False
-            oob_score = False
+        bootstrap = parse_boolean(bootstrap, "bootstrap")
+        oob_score = bootstrap
         if class_weight=="No":
             class_weight=None
         if ccp_alpha<0:
@@ -866,4 +945,4 @@ def main():
  
     
 if __name__=='__main__':
-	main()
+    raise SystemExit(main())

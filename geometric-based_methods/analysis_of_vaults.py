@@ -7,7 +7,6 @@ Created on Mon Dec 18 13:00:29 2023
 """
 import sys
 import os
-import open3d as o3d
 import numpy as np
 import cccorelib
 import pycc
@@ -15,6 +14,7 @@ import math
 from scipy.spatial import cKDTree
 from scipy.interpolate import UnivariateSpline
 from scipy.spatial import KDTree
+from sklearn.cluster import DBSCAN
 import pandas as pd
 
 import tkinter as tk
@@ -36,6 +36,7 @@ sys.path.insert(0, additional_modules_directory_2)
 from main import P2p_getdata,get_istance,get_point_clouds_name
 from main_gui import show_features_window, definition_of_labels_type_1,definition_of_entries_type_1, definition_of_combobox_type_1,definition_ok_cancel_buttons_type_1,definition_run_cancel_buttons_type_1, definition_of_buttons_type_1
 from analysis_of_arches import arch_estimation
+from geometry_compat import rotate_points_around_z
 
 #%% INPUTS AT THE BEGINING
 name_list=get_point_clouds_name()
@@ -314,21 +315,15 @@ class GUI_vaults(tk.Frame):
             if self.vault_parameters=="Not selected":
                 raise RuntimeError ("Please select a vault type")
                 
-            # Creating a point cloud in open3d format
-            point_cloud = o3d.geometry.PointCloud()
-            point_cloud.points = o3d.utility.Vector3dVector(np.array([pcd['X'], pcd['Y'], pcd['Z']]).T)
+            point_cloud_numpy = np.array([pcd['X'], pcd['Y'], pcd['Z']]).T
             
             # Calculate the centroid of the point cloud
-            centroid = np.asarray(point_cloud.get_center())
-            point_cloud_numpy=np.asarray(point_cloud.points)
+            centroid = np.mean(point_cloud_numpy, axis=0)
             
             # EXTRACTION OF THE MAIN AXIS
             initial_point_cloud_z_restriction = point_cloud_numpy[:, 2] # Reduced point cloud according with a criteria (e.g. zmax-zmin)
             point_indices_z_restriction_numpy = np.where(np.logical_and(initial_point_cloud_z_restriction >= self.vault_parameters["zmin"], initial_point_cloud_z_restriction <= self.vault_parameters["zmax"]))[0] #Filter indices of points within the specified z-range   
             reduced_points_z_numpy = np.asarray(point_cloud_numpy)[point_indices_z_restriction_numpy] #Extract the points within the z-range
-            cropped_initial_point_cloud_z_restriction = o3d.geometry.PointCloud()
-            cropped_initial_point_cloud_z_restriction.points = o3d.utility.Vector3dVector(reduced_points_z_numpy)
-            
             progress.setMethodTitle("Extracting the axis of the vault...")  
             
             # Perform DBSCAN clustering
@@ -339,8 +334,10 @@ class GUI_vaults(tk.Frame):
             # Store in the database of CloudCompare
             CC.addToDB(pc_results_prediction)
             CC.updateUI()
-            labels = cropped_initial_point_cloud_z_restriction.cluster_dbscan(eps=self.vault_parameters["e"], min_points=self.vault_parameters["min_points"])
-            labels= np.asarray (labels)        
+            labels = DBSCAN(
+                eps=self.vault_parameters["e"],
+                min_samples=self.vault_parameters["min_points"],
+            ).fit_predict(reduced_points_z_numpy)
             num_clusters = len(set(labels)) - (1 if -1 in labels else 0) # Number of clusters in labels, ignoring noise if present (-1 is noise)         
                           
             if num_clusters==2:
@@ -454,10 +451,6 @@ class GUI_vaults(tk.Frame):
             # Combine x_curve, y_curve, and z_column_curve into a 2D array
             points_on_curve_with_z_numpy = np.column_stack((x_curve, y_curve, z_column_curve)) 
             
-            # It is neccesary to create the open3d point cloud of the axis in order to apply further transformations
-            points_on_curve_with_z=o3d.geometry.PointCloud()
-            points_on_curve_with_z.points=o3d.utility.Vector3dVector(points_on_curve_with_z_numpy) 
-            
             # Rotation of the point cloud according with the angle
             pc_results_prediction = pycc.ccPointCloud(points_on_curve_with_z_numpy [:,0], points_on_curve_with_z_numpy [:,1], points_on_curve_with_z_numpy [:,2])
             pc_results_prediction.setName("Points used for estimating the axis")
@@ -502,30 +495,31 @@ class GUI_vaults(tk.Frame):
                 angle_in_degrees = math.degrees(math.atan(slope_at_point))
     
                 # Rotation of the point cloud in accordance with the local slope of the axus
-                final_point_cloud = o3d.geometry.PointCloud()
-                final_point_cloud.points = o3d.utility.Vector3dVector(np.asarray(point_cloud.points))
-                final_R = point_cloud.get_rotation_matrix_from_axis_angle((0, 0, -math.radians(angle_in_degrees)))
-                final_point_cloud.rotate(final_R,center=(rotation_center[0],rotation_center[1],rotation_center[2])) 
-                final_point_cloud_numpy = np.asarray(final_point_cloud.points)
-                final_point_cloud.points=o3d.utility.Vector3dVector(final_point_cloud_numpy)
+                final_point_cloud_numpy = rotate_points_around_z(
+                    point_cloud_numpy,
+                    -math.radians(angle_in_degrees),
+                    rotation_center,
+                )
     
                 
                 # Calculate the min and max bounds of the bounding box
                 current_min_bound_numpy = rotation_center - np.array([self.vault_parameters["thickness"], thickness_y, thickness_z])
                 current_max_bound_numpy = rotation_center + np.array([self.vault_parameters["thickness"], thickness_y, thickness_z])
                 
-                # Define the bounding box
-                bbox = o3d.geometry.AxisAlignedBoundingBox(current_min_bound_numpy, current_max_bound_numpy)
-                
-                # Crop the point cloud using the bounding box
-                cropped_final_point_cloud = final_point_cloud.crop(bbox)          
+                # Crop the rotated point cloud using the axis-aligned bounds.
+                inside_bounds = np.all(
+                    (final_point_cloud_numpy >= current_min_bound_numpy)
+                    & (final_point_cloud_numpy <= current_max_bound_numpy),
+                    axis=1,
+                )
+                cropped_final_point_cloud_numpy = final_point_cloud_numpy[inside_bounds]
                 
                 # Undo the rotation of the section to place the results in the same coordinate system than the initial point cloud
-                cropped_point_cloud = o3d.geometry.PointCloud()
-                cropped_point_cloud.points = o3d.utility.Vector3dVector(np.asarray(cropped_final_point_cloud.points))
-                cropped_final_R = cropped_final_point_cloud.get_rotation_matrix_from_axis_angle((0, 0, math.radians(angle_in_degrees)))
-                cropped_point_cloud.rotate(cropped_final_R,center=(rotation_center[0],rotation_center[1],rotation_center[2])) 
-                cropped_point_cloud_numpy = np.asarray(cropped_point_cloud.points)
+                cropped_point_cloud_numpy = rotate_points_around_z(
+                    cropped_final_point_cloud_numpy,
+                    math.radians(angle_in_degrees),
+                    rotation_center,
+                )
                 pc_results_prediction = pycc.ccPointCloud(cropped_point_cloud_numpy[:,0], cropped_point_cloud_numpy[:,1], cropped_point_cloud_numpy[:,2])
                 pc_results_prediction.setName("Section_"+str(i))
                 

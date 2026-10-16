@@ -18,7 +18,6 @@ from tkinter import filedialog
 
 import pandas as pd
 import numpy as np
-import open3d as o3d
 
 
 #%% ADDING THE MAIN MODULE FOR ADDITIONAL FUNCTIONS
@@ -30,6 +29,7 @@ additional_modules_directory=os.path.sep.join(path_parts[:-2])+ '\main_module'
 sys.path.insert(0, additional_modules_directory)
 from main import P2p_getdata,get_istance,get_point_clouds_name, check_input, write_yaml_file
 from main_gui import show_features_window, definition_of_labels_type_1,definition_of_entries_type_1, definition_of_combobox_type_1,definition_ok_cancel_buttons_type_1,definition_run_cancel_buttons_type_1, definition_of_buttons_type_1
+from geometry_compat import read_ascii_ply_xyz, write_ascii_ply_xyz
 
 CC = pycc.GetInstance()
 current_directory=os.path.dirname(os.path.abspath(__file__))
@@ -127,22 +127,15 @@ class GUI_ad(tk.Frame):
             # Convert X, Y, Z columns to a NumPy array
             points = pcd_training[['X', 'Y', 'Z']].values
 
-            # Pass to open3d geometry
-            pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(points)
-            
             # Write the input file
-            o3d.io.write_point_cloud(os.path.join(self.output_directory,pc_name+'.ply'),pcd, write_ascii=True)
+            write_ascii_ply_xyz(os.path.join(self.output_directory,pc_name+'.ply'), points)
             
             # Run the cmd of anisotropic filter 
             command= processing_file + ' --i "' + os.path.join(self.output_directory,pc_name+'.ply') + '" --o "' + os.path.join(self.output_directory,'denoised_'+pc_name+'.ply"')
             os.system(command)
             
-            # read the output_file
-            pcd = o3d.io.read_point_cloud(os.path.join(self.output_directory,'denoised_'+pc_name+'.ply'))
-            
-            # Convert Open3D.o3d.geometry.PointCloud to numpy array
-            xyz_load = np.asarray(pcd.points)
+            # Read the ASCII PLY produced by the standalone anisotropic filter.
+            xyz_load = read_ascii_ply_xyz(os.path.join(self.output_directory,'denoised_'+pc_name+'.ply'))
             point_cloud = pycc.ccPointCloud(xyz_load[:,0], xyz_load[:,1], xyz_load[:,2])
             point_cloud.setName(pc_name+'_denoised')
             CC.addToDB(point_cloud)        
@@ -165,8 +158,7 @@ if __name__ == "__main__":
         window.mainloop()    
     except Exception as e:
         print("An error occurred during the computation of the algorithm:", e)
-        
+
         # Optionally, print detailed traceback
         traceback.print_exc()
         window.destroy()
-        
