@@ -6,7 +6,6 @@ from pathlib import Path
 import os
 import sys
 import tkinter as tk
-import os
 
 MAIN_ICON_PATH = str(Path(__file__).parent / "logo.png")
 
